@@ -1,0 +1,129 @@
+import "package:flutter/material.dart";
+
+import "../../foundations/tokens/color_tokens.dart";
+import "../../foundations/tokens/elevetion_token.dart";
+import "../../foundations/tokens/radius_tokens.dart";
+import "../../foundations/tokens/spacing_tokens.dart";
+import "../../foundations/tokens/typography_tokens.dart";
+
+/// セクション単位のコンテンツを表示するカードコンポーネント。
+///
+/// 見出し、サブタイトル、アクション群を渡せるため、ダッシュボード画面の
+/// セクション表現を手早く構築できる。
+class YataSectionCard extends StatelessWidget {
+  /// [YataSectionCard]を生成する。
+  const YataSectionCard({
+    required this.child,
+    super.key,
+    this.title,
+    this.subtitle,
+    this.actions,
+    this.padding = YataSpacingTokens.cardPadding,
+    this.backgroundColor = YataColorTokens.surface,
+    this.borderColor = YataColorTokens.border,
+    this.expandChild = false,
+  });
+
+  /// セクションタイトル。
+  final String? title;
+
+  /// タイトルの補足説明。
+  final String? subtitle;
+
+  /// タイトル右側に並べるアクションウィジェット群。
+  final List<Widget>? actions;
+
+  /// 内側のパディング。
+  final EdgeInsetsGeometry padding;
+
+  /// カードの背景色。
+  final Color backgroundColor;
+
+  /// カードのボーダー色。
+  final Color borderColor;
+
+  /// 本文コンテンツ。
+  final Widget child;
+
+  /// 子コンテンツを縦方向に展開してレイアウトする（内部でExpandedを使用）。
+  final bool expandChild;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<BoxShadow> shadow = YataElevationTokens.level0;
+    final BorderRadius borderRadius = YataRadiusTokens.borderRadiusCard;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: borderRadius,
+        border: Border.all(color: borderColor),
+        boxShadow: shadow,
+      ),
+      child: Padding(
+        padding: padding,
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            // * SingleChildScrollView 等の高さが非拘束な環境では、
+            //   Column 配下に Expanded/Flexible を置くと例外になる。
+            //   そのため、bounded なときのみ Expanded を使用する。
+            final bool canExpand = expandChild && constraints.hasBoundedHeight;
+
+            final bool hasTitle = title != null;
+            final bool hasActions = actions?.isNotEmpty ?? false;
+            final bool hasSubtitle = subtitle != null;
+            final bool hasHeader = hasTitle || hasActions;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: canExpand ? MainAxisSize.max : MainAxisSize.min,
+              children: <Widget>[
+                if (hasHeader) _Header(title: title, actions: actions),
+                if (hasSubtitle)
+                  Padding(
+                    padding: EdgeInsets.only(top: hasHeader ? YataSpacingTokens.xs : 0),
+                    child: Text(
+                      subtitle!,
+                      style:
+                          Theme.of(context).textTheme.bodyMedium ?? YataTypographyTokens.bodyMedium,
+                    ),
+                  ),
+                if (hasHeader || hasSubtitle) const SizedBox(height: YataSpacingTokens.md),
+                if (canExpand) Expanded(child: child) else child,
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header({this.title, this.actions});
+
+  final String? title;
+  final List<Widget>? actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextTheme textTheme = Theme.of(context).textTheme;
+
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              if (title != null)
+                Text(title!, style: textTheme.titleLarge ?? YataTypographyTokens.titleLarge),
+            ],
+          ),
+        ),
+        if (actions != null && actions!.isNotEmpty)
+          Wrap(spacing: YataSpacingTokens.sm, runSpacing: YataSpacingTokens.xs, children: actions!),
+      ],
+    );
+  }
+}

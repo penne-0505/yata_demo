@@ -1,0 +1,274 @@
+import "../../../core/constants/enums.dart";
+import "../models/order_model.dart";
+import "../shared/order_status_mapper.dart";
+
+/// カートアイテム追加/更新リクエスト
+class CartItemRequest {
+  CartItemRequest({
+    required this.menuItemId,
+    required this.quantity,
+    this.selectedOptions,
+    this.specialRequest,
+  });
+
+  /// JSONからオブジェクトを生成
+  factory CartItemRequest.fromJson(Map<String, dynamic> json) => CartItemRequest(
+    menuItemId: json["menu_item_id"] as String,
+    quantity: (json["quantity"] as num?)?.toInt() ?? 1,
+    selectedOptions: json["selected_options"] as Map<String, String>?,
+    specialRequest: json["special_request"] as String?,
+  );
+
+  /// メニューアイテムID
+  String menuItemId;
+
+  /// 数量
+  int quantity;
+
+  /// 選択されたオプション
+  Map<String, String>? selectedOptions;
+
+  /// 特別リクエスト
+  String? specialRequest;
+
+  /// オブジェクトをJSONに変換
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    "menu_item_id": menuItemId,
+    "quantity": quantity,
+    "selected_options": selectedOptions,
+    "special_request": specialRequest,
+  };
+}
+
+/// 注文確定リクエスト
+class OrderCheckoutRequest {
+  OrderCheckoutRequest({
+    required this.paymentMethod,
+    required this.discountAmount,
+    this.customerName,
+    this.notes,
+  });
+
+  /// JSONからオブジェクトを生成
+  factory OrderCheckoutRequest.fromJson(Map<String, dynamic> json) => OrderCheckoutRequest(
+    paymentMethod: _parsePaymentMethod(json["payment_method"] as String?),
+    customerName: json["customer_name"] as String?,
+    discountAmount: (json["discount_amount"] as num?)?.toInt() ?? 0,
+    notes: json["notes"] as String?,
+  );
+
+  /// 支払い方法
+  PaymentMethod paymentMethod;
+
+  /// 顧客名
+  String? customerName;
+
+  /// 割引額
+  int discountAmount;
+
+  /// 備考
+  String? notes;
+
+  static PaymentMethod _parsePaymentMethod(String? rawValue) {
+    if (rawValue == null) {
+      return PaymentMethod.cash;
+    }
+
+  // TODO(2025-11): 旧バージョンから送信される"card"の互換対応。移行完了後に削除する。
+  final String normalizedValue = rawValue == "card" ? "paypay" : rawValue;
+
+    return PaymentMethod.values.firstWhere(
+      (PaymentMethod method) => method.value == normalizedValue,
+      orElse: () => PaymentMethod.cash,
+    );
+  }
+
+  /// オブジェクトをJSONに変換
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    "payment_method": paymentMethod.value,
+    "customer_name": customerName,
+    "discount_amount": discountAmount,
+    "notes": notes,
+  };
+}
+
+/// 会計処理の結果を表すレスポンス。
+class OrderCheckoutResult {
+  const OrderCheckoutResult._({
+    required this.order,
+    required this.newCart,
+    required this.isStockInsufficient,
+  });
+
+  /// 正常完了時の結果を生成する。
+  factory OrderCheckoutResult.success({required Order order, Order? newCart}) =>
+      OrderCheckoutResult._(order: order, newCart: newCart, isStockInsufficient: false);
+
+  /// 在庫不足などにより会計できなかった場合の結果を生成する。
+  factory OrderCheckoutResult.stockInsufficient({required Order order}) =>
+      OrderCheckoutResult._(order: order, newCart: null, isStockInsufficient: true);
+
+  /// 会計対象となった注文。
+  final Order order;
+
+  /// 会計完了後に新規作成されたカート（存在する場合）。
+  final Order? newCart;
+
+  /// 在庫不足により完了できなかったかどうか。
+  final bool isStockInsufficient;
+
+  /// 会計が成功したかどうか。
+  bool get isSuccess => !isStockInsufficient;
+}
+
+/// 注文検索リクエスト
+class OrderSearchRequest {
+  OrderSearchRequest({
+    required this.page,
+    required this.limit,
+    this.dateFrom,
+    this.dateTo,
+    this.statusFilter,
+    this.customerName,
+    this.menuItemName,
+    this.searchQuery,
+  });
+
+  /// JSONからオブジェクトを生成
+  factory OrderSearchRequest.fromJson(Map<String, dynamic> json) => OrderSearchRequest(
+    dateFrom: json["date_from"] == null ? null : DateTime.parse(json["date_from"] as String),
+    dateTo: json["date_to"] == null ? null : DateTime.parse(json["date_to"] as String),
+    statusFilter: json["status_filter"] == null
+        ? null
+        : (json["status_filter"] as List<dynamic>).map(OrderStatusMapper.fromJson).toList(),
+    customerName: json["customer_name"] as String?,
+    menuItemName: json["menu_item_name"] as String?,
+    searchQuery: json["search_query"] as String?,
+    page: (json["page"] as num?)?.toInt() ?? 1,
+    limit: (json["limit"] as num?)?.toInt() ?? 20,
+  );
+
+  /// 開始日
+  DateTime? dateFrom;
+
+  /// 終了日
+  DateTime? dateTo;
+
+  /// ステータスフィルター
+  List<OrderStatus>? statusFilter;
+
+  /// 顧客名
+  String? customerName;
+
+  /// メニューアイテム名
+  String? menuItemName;
+
+  /// 検索クエリ（顧客名や注文番号など）
+  String? searchQuery;
+
+  /// ページ番号
+  int page;
+
+  /// 1ページあたりの件数
+  int limit;
+
+  /// オブジェクトをJSONに変換
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    "date_from": dateFrom?.toIso8601String(),
+    "date_to": dateTo?.toIso8601String(),
+    "status_filter": statusFilter?.map(OrderStatusMapper.toJson).toList(),
+    "customer_name": customerName,
+    "menu_item_name": menuItemName,
+    "search_query": searchQuery,
+    "page": page,
+    "limit": limit,
+  };
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! OrderSearchRequest) {
+      return false;
+    }
+
+    return dateFrom == other.dateFrom &&
+        dateTo == other.dateTo &&
+        _listEquals(statusFilter, other.statusFilter) &&
+        customerName == other.customerName &&
+        menuItemName == other.menuItemName &&
+        searchQuery == other.searchQuery &&
+        page == other.page &&
+        limit == other.limit;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    dateFrom,
+    dateTo,
+    statusFilter,
+    customerName,
+    menuItemName,
+    searchQuery,
+    page,
+    limit,
+  );
+
+  /// List equality check
+  bool _listEquals(List<OrderStatus>? a, List<OrderStatus>? b) {
+    if (a == null) {
+      return b == null;
+    }
+    if (b == null) {
+      return false;
+    }
+    if (a.length != b.length) {
+      return false;
+    }
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+/// 注文金額計算結果
+class OrderCalculationResult {
+  OrderCalculationResult({
+    required this.subtotal,
+    required this.taxAmount,
+    required this.discountAmount,
+    required this.totalAmount,
+  });
+
+  /// JSONからオブジェクトを生成
+  factory OrderCalculationResult.fromJson(Map<String, dynamic> json) => OrderCalculationResult(
+    subtotal: (json["subtotal"] as num?)?.toInt() ?? 0,
+    taxAmount: (json["tax_amount"] as num?)?.toInt() ?? 0,
+    discountAmount: (json["discount_amount"] as num?)?.toInt() ?? 0,
+    totalAmount: (json["total_amount"] as num?)?.toInt() ?? 0,
+  );
+
+  /// 小計
+  int subtotal;
+
+  /// 税額
+  int taxAmount;
+
+  /// 割引額
+  int discountAmount;
+
+  /// 合計金額
+  int totalAmount;
+
+  /// オブジェクトをJSONに変換
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    "subtotal": subtotal,
+    "tax_amount": taxAmount,
+    "discount_amount": discountAmount,
+    "total_amount": totalAmount,
+  };
+}

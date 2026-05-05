@@ -1,7 +1,7 @@
 # Project Task Management Rules
 
 ## 0. System Metadata
-- **Current Max ID**: `Next ID No: 4` (※タスク追加時にインクリメント必須)
+- **Current Max ID**: `Next ID No: 13` (※タスク追加時にインクリメント必須)
 - **ID Source of Truth**: このファイルの `Next ID No` 行が、全プロジェクトにおける唯一のID発番元である。
 
 ## 1. Task Lifecycle (State Machine)
@@ -232,6 +232,126 @@ ID生成およびタイトルのプレフィックスには以下のみを使用
   2. [ ] 正しい著作者名に編集
   3. [ ] 変更を保存
 - **Description**: LICENSEファイルの著作者表示をプロジェクトに合わせて更新する。
+- **Plan**: None
+
+- **Title**: [Feat] Demo Runtime Bootstrap
+- **ID**: Core-Feat-5
+- **Priority**: P0
+- **Size**: M
+- **Area**: Core
+- **Dependencies**: []
+- **Goal**: デモ起動経路で Supabase 初期化を呼ばず、Provider override を通じてローカル実装へ差し替えられる入口が用意されている。
+- **Steps**:
+  1. [x] Plan の "Demo runtime bootstrap" に従い、`lib/main.dart` の Supabase 初期化をデモ経路から外す
+  2. [x] demo 用 override builder を `lib/app/wiring/` 配下に追加する
+  3. [x] `ProviderContainer` 作成時に demo overrides を適用する
+  4. [x] Supabase URL/key が未設定でもデモ起動が継続することを確認する
+- **Description**: 認証・DB・Realtime の差し替え前提となるデモ専用 runtime bootstrap を作る。
+- **Plan**: `_docs/plan/Core/demo-local-runtime/plan.md`
+
+- **Title**: [Feat] Fixed Demo User Auth
+- **ID**: Core-Feat-6
+- **Priority**: P0
+- **Size**: M
+- **Area**: Core
+- **Dependencies**: [Core-Feat-5]
+- **Goal**: 起動直後に `demo-user` として認証済み扱いになり、`/auth` を経由せず主要画面へ入れる。
+- **Steps**:
+  1. [x] Plan の "Demo auth" に従い、`AuthRepositoryContract` のデモ実装を追加する
+  2. [x] `authRepositoryProvider` を demo override で差し替える
+  3. [x] `currentUserIdProvider` が `demo-user` を返すことをテストする
+  4. [x] `AuthGuard` が `/order` への表示を妨げないことを確認する
+- **Description**: Google OAuth と Supabase session warm-up を公開デモ経路から外し、固定ユーザーで業務フローを開始できるようにする。
+- **Plan**: `_docs/plan/Core/demo-local-runtime/plan.md`
+
+- **Title**: [Feat] Drift Demo Database Schema
+- **ID**: Core-Feat-7
+- **Priority**: P0
+- **Size**: M
+- **Area**: Core
+- **Dependencies**: [Core-Feat-5]
+- **Goal**: デモ対象テーブルの Drift schema と database bootstrap が追加され、build_runner で生成コードを作れる。
+- **Steps**:
+  1. [x] Plan の "Drift schema" に従い、Drift 関連依存を `pubspec.yaml` に追加する
+  2. [x] `lib/infra/local/database/` に `YataDemoDatabase` と対象 table definitions を追加する
+  3. [x] enum と DateTime の保存形式を既存 model の JSON key と対応させる
+  4. [x] `dart run build_runner build --delete-conflicting-outputs` が通ることを確認する
+- **Description**: Supabase テーブル相当のローカル永続化基盤を Drift で作る。
+- **Plan**: `_docs/plan/Core/demo-local-runtime/plan.md`
+
+- **Title**: [Feat] Drift CRUD Repository Wiring
+- **ID**: Core-Feat-8
+- **Priority**: P0
+- **Size**: M
+- **Area**: Core
+- **Dependencies**: [Core-Feat-6, Core-Feat-7]
+- **Goal**: `materials` から `daily_summaries` までの対象 repository が、デモ経路では `DriftCrudRepository` 経由で読み書きできる。
+- **Steps**:
+  1. [x] Plan の "Drift CRUD repository" に従い、`CrudRepository<T, String>` の Drift 実装を追加する
+  2. [x] 現行 UI/Service が使う `QueryFilter` / `OrderByCondition` を Drift query に変換する
+  3. [x] `GenericCrudRepository` 利用箇所を demo override で `DriftCrudRepository` に差し替える
+  4. [x] CRUD と主要検索条件の unit test を追加する
+- **Description**: feature repository wrapper と Service/UI を維持しながら、データアクセスだけをローカル DB へ差し替える。
+- **Plan**: `_docs/plan/Core/demo-local-runtime/plan.md`
+
+- **Title**: [Feat] Demo Seed Data And Reset
+- **ID**: Core-Feat-9
+- **Priority**: P0
+- **Size**: M
+- **Area**: Core
+- **Dependencies**: [Core-Feat-8]
+- **Goal**: 初回起動直後にメニュー、材料、在庫、注文履歴、売上サマリーが投入され、必要時にデモデータをリセットできる。
+- **Steps**:
+  1. [x] Plan の "Seed data" に従い、deterministic seed dataset を追加する
+  2. [x] seed marker によって重複投入を防ぐ
+  3. [x] reset service を追加し、DB 初期化と seed 再投入を一連の操作にする
+  4. [x] seed 初回投入、重複防止、reset 後再投入の test を追加する
+- **Description**: 空の業務アプリにならないよう、公開デモに必要な初期データと再現性を作る。
+- **Plan**: `_docs/plan/Core/demo-local-runtime/plan.md`
+
+- **Title**: [Refactor] No-op Realtime For Demo
+- **ID**: Core-Refactor-10
+- **Priority**: P1
+- **Size**: S
+- **Area**: Core
+- **Dependencies**: [Core-Feat-8]
+- **Goal**: デモ経路では Realtime 購読が Supabase に接続せず成功扱いになり、UI の接続表示や refresh 導線が壊れない。
+- **Steps**:
+  1. [x] `RealtimeManagerContract` の no-op 実装を追加する
+  2. [x] `startMonitoring` / `stopMonitoring` / `getActiveSubscriptions` / `getStats` をローカル状態で完結させる
+  3. [x] `realtimeManagerProvider` を demo override で差し替える
+  4. [x] メニュー・注文・在庫画面の初期ロードが Realtime 接続なしで失敗しないことを確認する
+- **Description**: サーバー同期なしのデモでも、既存 Service/UI の Realtime 前提を崩さないためのダミー実装を入れる。
+- **Plan**: None
+
+- **Title**: [Feat] Local CSV Export
+- **ID**: Core-Feat-11
+- **Priority**: P1
+- **Size**: M
+- **Area**: Core
+- **Dependencies**: [Core-Feat-8, Core-Feat-9]
+- **Goal**: Supabase RPC を使わず、ローカル DB から主要データセットの CSV export ができる。
+- **Steps**:
+  1. [x] Plan の "Local CSV export" に従い、`CsvExportRepositoryContract` のローカル実装を追加する
+  2. [x] `CsvExportJobsRepositoryContract` を memory/no-op または Drift 実装で差し替える
+  3. [x] orders / order_items / materials / menu_items / daily_summaries の CSV を組み立てる
+  4. [x] CSV header、行数、文字列エスケープの test を追加する
+- **Description**: 公開デモで export 機能を非表示にせず、クラウドなしで完結する CSV 出力へ寄せる。
+- **Plan**: `_docs/plan/Core/demo-local-runtime/plan.md`
+
+- **Title**: [Doc] Document Demo Local Runtime
+- **ID**: Docs-Doc-12
+- **Priority**: P1
+- **Size**: S
+- **Area**: Docs
+- **Dependencies**: [Core-Feat-5, Core-Feat-6, Core-Feat-7, Core-Feat-8, Core-Feat-9, Core-Refactor-10, Core-Feat-11]
+- **Goal**: README または `_docs/guide/` に、デモモードの起動方法、ローカル DB、seed/reset、Supabase 非依存の前提が記載されている。
+- **Steps**:
+  1. [x] 実装結果に合わせて README の概要と起動手順を更新する
+  2. [x] 必要に応じて `_docs/guide/` にデモ運用ガイドを追加する
+  3. [x] Supabase 依存が残る場合は、残存理由と削除条件を明記する
+  4. [x] ドキュメント内のコマンドが実際に存在することを確認する
+- **Description**: デモ化後の開発者・展示担当者向け運用情報を、実装と矛盾しない形で残す。
 - **Plan**: None
 
 ---

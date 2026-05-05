@@ -1,76 +1,82 @@
-# Documentation Driven Development Template
+# YATA Demo
 
-> This README is available in English and Japanese. English speakers, please scroll down.
+YATA は、小規模な飲食・屋台オペレーション向けの注文、在庫、メニュー、売上確認アプリです。
+**このリポジトリはローカルデモです。**ログイン、Supabase 初期化、Realtime 接続、Supabase RPC を**使わず**、固定ユーザーと Drift のローカル DB だけで主要な業務フローを触れます。(本来はこれらスタックを用いる前提の実装です。)
 
-## 概要
+## 現在の runtime
 
-このリポジトリは私が常用しているドキュメント駆動開発 *(Documentation Driven Development)* のテンプレートです。
+- 標準: `YATA_DEMO_MODE=true`
+- 認証: `demo-user` として起動直後から認証済み
+- DB: Drift / SQLite の `yata_demo`
+- 初期データ: 起動時に `DemoSeedService.ensureSeeded()` が投入
+- Realtime: `NoopRealtimeManager` が接続済み扱いで購読を保持
+- CSV export: `LocalCsvExportRepository` がローカル DB から CSV を生成
 
-開発サイクルはドキュメントと [TODO.md](TODO.md) によって構成されています。
+Supabase 実装と依存はまだ残していますが、標準のデモ経路では `SupabaseClientService.initialize()`、Supabase Auth、Realtime、RPC export を呼びません。Supabase 経路を使う場合だけ `--dart-define=YATA_DEMO_MODE=false` を指定します。
 
-人がサイクルを回すことも出来ますが、基本的には**Claude Codeなどのコーディングエージェント**が、この規則に従って自律的な開発を行うために設計されました。
+## セットアップ
 
-**詳細については [ガイドライン](_docs/documentation_guide.md) を参照してください。**
+このプロジェクトは FVM の Flutter 3.35.5 を前提にしています。
 
-## 使用方法
+```bash
+.fvm/flutter_sdk/bin/flutter pub get
+.fvm/flutter_sdk/bin/dart run build_runner build --delete-conflicting-outputs
+```
 
-1. このリポジトリをフォークまたはクローンします。
-2. プロジェクトに合わせてドキュメントと設定ファイルを編集します。
-3. 開発を開始します。
+デモモードでは `.env` に Supabase の実値は不要です。`EnvValidator` は `.env` がなくても起動を継続し、Supabase 必須値の不足をデモ起動のブロッカーにしません。
 
-### カスタマイズ
+## 起動
 
-使用に当たっては、以下のファイルをプロジェクトに合わせてカスタマイズしてください。
+```bash
+.fvm/flutter_sdk/bin/flutter run -d linux
+```
 
-#### AGENTS.md
+デモ起動後は `/order` を入口に、注文作成、注文履歴、在庫確認、メニュー確認、売上確認、CSV export をローカルデータで試せます。
 
-変更の推奨事項はありませんが、特定コマンドの使用指示が含まれているので、必要に応じて編集してください。
+## 配布版とログ
 
-#### README.md
+Linux AppImage や Windows portable zip でも標準はローカルデモモードです。`.env` を同梱しない限り Supabase へ接続せず、ログはアプリのサポートディレクトリに `app-YYYYMMDD-NN.log` 形式の NDJSON として保存されます。
 
-このREADME自体も、プロジェクトに合わせて編集してください。
+Windows 配布物は単体 exe ではなく、`yata_demo.exe`、`flutter_windows.dll`、`data/` などをまとめた portable zip です。zip を展開して `yata_demo.exe` を起動します。
 
-#### LICENSE.txt
+開発用に `.env` で `LOG_DIR=./_logs` を指定した場合だけ、カレントディレクトリ基準の `_logs/` に保存されます。`.env` と `_logs/` は公開リポジトリへ含めない前提です。
 
-[LICENSE](LICENSE.txt)についても、特に著作者の表示を編集してください。
+Supabase 経路を明示的に使う場合:
 
-## ライセンス
+```bash
+.fvm/flutter_sdk/bin/flutter run -d linux --dart-define=YATA_DEMO_MODE=false
+```
 
-このリポジトリは [MITライセンス](LICENSE.txt) の下でライセンスされています。
+この場合は `SUPABASE_URL` と `SUPABASE_ANON_KEY` を `.env`、OS 環境変数、または `--dart-define` で設定してください。
 
----
+## デモデータ
 
-## Summary
+初回起動時に `demo_seed_markers` を確認し、seed version が未適用なら次のデータを投入します。
 
-This repository is a template for Documentation Driven Development that I commonly use.
+- 材料カテゴリ、材料、仕入先
+- メニューカテゴリ、メニュー、レシピ
+- 仕入、在庫トランザクション、廃棄ログ
+- カート、注文履歴、注文明細
+- 日次売上サマリー
 
-The development cycle is structured around documentation and [TODO.md](TODO.md).
+デモデータを初期状態に戻す場合は、開発用コードやテストから `DemoSeedService.resetAndSeed()` を呼びます。`ensureSeeded()` は同一 seed version の重複投入を防ぎます。
 
-While humans can run the cycle, it is primarily designed **for coding agents like Claude Code** to autonomously develop according to these rules.
+## CSV export
 
-**For more details, please refer to the [Guidelines](_docs/documentation_guide.md).**
+ローカル export は次の dataset に対応しています。
 
-## Usage
+- `sales_line_items`
+- `purchases_line_items`
+- `inventory_transactions`
+- `waste_log`
+- `menu_engineering_daily`
 
-1. Fork or clone this repository.
-2. Edit the documentation and configuration files to suit your project.
-3. Start development.
+既存の `CsvExportService` は維持し、repository と job log をデモ経路で `LocalCsvExportRepository` / `LocalCsvExportJobsRepository` に差し替えています。Supabase RPC は使いません。
 
-### Customization
+## 検証
 
-When using this template, please customize the following files to fit your project.
+```bash
+.fvm/flutter_sdk/bin/flutter test
+```
 
-#### AGENTS.md
-
-No specific changes are recommended here, but feel free to edit it as needed, especially if you want to suggest the use of certain commands.
-
-#### README.md
-
-Feel free to edit this README itself to suit your project.
-
-#### LICENSE.txt
-
-Please edit the [LICENSE](LICENSE.txt) file, particularly the author attribution.
-
-## License
-This repository is licensed under the [MIT License](LICENSE.txt).
+今回のデモ runtime は、差分対象ファイルの `dart analyze` と、seed、Drift CRUD、no-op Realtime、local CSV export、provider wiring のテストで検証しています。リポジトリ全体の `dart analyze` は既存 lint が残っているため、全体 lint の解消は別作業として扱います。詳細は `_docs/guide/demo-local-runtime/guide.md` と `_docs/plan/Core/demo-local-runtime/plan.md` を参照してください。
