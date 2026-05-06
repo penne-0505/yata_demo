@@ -59,9 +59,9 @@ Widget _buildWebDemoFrame({
 }) {
   final MediaQueryData mediaQuery = MediaQuery.of(context);
   final Size viewport = mediaQuery.size;
-  const double minContentWidth = 1180;
-  const double minContentHeight = 720;
-  const double maxContentWidth = 1480;
+  const double minContentWidth = 1240;
+  const double minContentHeight = 660;
+  const double maxContentWidth = 1560;
   const double outerPadding = 28;
   const double frameHeaderHeight = 48;
   const double frameRadius = 30;
@@ -72,7 +72,7 @@ Widget _buildWebDemoFrame({
   final double contentWidth = availableWidth
       .clamp(minContentWidth, maxContentWidth)
       .toDouble();
-  final double contentHeight = (availableHeight - frameHeaderHeight)
+  final double contentHeight = (availableHeight - frameHeaderHeight - 24)
       .clamp(minContentHeight, double.infinity)
       .toDouble();
   final Size contentSize = Size(contentWidth, contentHeight);
