@@ -14,7 +14,9 @@ mixin MenuFilterController on _OrderManagementControllerBase {
     );
 
     await _traceAsyncSection<void>("loadInitialData", () async {
-      final SettingsService settingsService = _ref.read(settingsServiceProvider);
+      final SettingsService settingsService = _ref.read(
+        settingsServiceProvider,
+      );
       final double taxRate = settingsService.current.taxRate;
 
       if (reset) {
@@ -32,13 +34,17 @@ mixin MenuFilterController on _OrderManagementControllerBase {
       try {
         await _traceAsyncSection<void>(
           "loadInitialData.sessionWarmup",
-          () => authService.ensureSupabaseSessionReady(timeout: const Duration(seconds: 5)),
+          () => authService.ensureSupabaseSessionReady(
+            timeout: const Duration(seconds: 5),
+          ),
           finishArguments: () => <String, dynamic>{
             "sessionReady": authService.isSupabaseSessionReady,
           },
           logThreshold: const Duration(milliseconds: 40),
         );
-        logSession.addPersistentMetadata(<String, dynamic>{"session_ready": true});
+        logSession.addPersistentMetadata(<String, dynamic>{
+          "session_ready": true,
+        });
       } on TimeoutException catch (error, stackTrace) {
         _logger.e(
           "Supabase session warm-up timed out before initial load",
@@ -47,13 +53,18 @@ mixin MenuFilterController on _OrderManagementControllerBase {
           st: stackTrace,
         );
         _logPerf("loadInitialData.sessionWarmupTimeout");
-        state = state.copyWith(isLoading: false, errorMessage: "認証セッションの準備に時間がかかっています。再度お試しください。");
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: "認証セッションの準備に時間がかかっています。再度お試しください。",
+        );
         logSession.failed(
           reason: "session_warmup_timeout",
           message: "注文管理 初期データ読み込み前にセッションウォームアップがタイムアウト",
           metadata: <String, dynamic>{"timeoutMs": 5000},
         );
-        logSession.addPersistentMetadata(<String, dynamic>{"session_ready": false});
+        logSession.addPersistentMetadata(<String, dynamic>{
+          "session_ready": false,
+        });
         return;
       } catch (error, stackTrace) {
         _logger.e(
@@ -72,13 +83,19 @@ mixin MenuFilterController on _OrderManagementControllerBase {
           message: "注文管理 初期データ読み込み前にセッションウォームアップに失敗",
           metadata: <String, dynamic>{"error": error.toString()},
         );
-        logSession.addPersistentMetadata(<String, dynamic>{"session_ready": false});
+        logSession.addPersistentMetadata(<String, dynamic>{
+          "session_ready": false,
+        });
         return;
       }
 
-      final String? userId = _ref.read(currentUserIdProvider);
+      final String? userId =
+          _ref.read(currentUserIdProvider) ?? authService.currentUserId;
       if (userId == null) {
-        state = state.copyWith(isLoading: false, errorMessage: "ユーザー情報を取得できませんでした。再度ログインしてください。");
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: "ユーザー情報を取得できませんでした。再度ログインしてください。",
+        );
         _logPerf("loadInitialData.userMissing");
         logSession.failed(
           reason: "missing_user",
@@ -89,21 +106,25 @@ mixin MenuFilterController on _OrderManagementControllerBase {
       }
 
       try {
-        final List<MenuCategory> categoryModels = await _traceAsyncSection<List<MenuCategory>>(
-          "loadInitialData.getMenuCategories",
-          _menuService.getMenuCategories,
-          startArguments: () => <String, dynamic>{"userId": userId},
-        );
-        final List<MenuItem> menuItemModels = await _traceAsyncSection<List<MenuItem>>(
-          "loadInitialData.getMenuItemsByCategory",
-          () => _menuService.getMenuItemsByCategory(null),
-          startArguments: () => <String, dynamic>{"userId": userId},
-        );
+        final List<MenuCategory> categoryModels =
+            await _traceAsyncSection<List<MenuCategory>>(
+              "loadInitialData.getMenuCategories",
+              _menuService.getMenuCategories,
+              startArguments: () => <String, dynamic>{"userId": userId},
+            );
+        final List<MenuItem> menuItemModels =
+            await _traceAsyncSection<List<MenuItem>>(
+              "loadInitialData.getMenuItemsByCategory",
+              () => _menuService.getMenuItemsByCategory(null),
+              startArguments: () => <String, dynamic>{"userId": userId},
+            );
 
         _traceSyncSection<void>(
           "loadInitialData.updateMenuCache",
           () => _updateMenuCache(menuItemModels),
-          startArguments: () => <String, dynamic>{"items": menuItemModels.length},
+          startArguments: () => <String, dynamic>{
+            "items": menuItemModels.length,
+          },
           logThreshold: const Duration(milliseconds: 2),
         );
 
@@ -111,7 +132,9 @@ mixin MenuFilterController on _OrderManagementControllerBase {
             _traceSyncSection<List<MenuCategoryViewData>>(
               "loadInitialData.buildCategoryView",
               () => _buildCategoryView(categoryModels),
-              startArguments: () => <String, dynamic>{"categories": categoryModels.length},
+              startArguments: () => <String, dynamic>{
+                "categories": categoryModels.length,
+              },
               logThreshold: const Duration(milliseconds: 2),
             );
 
@@ -122,7 +145,9 @@ mixin MenuFilterController on _OrderManagementControllerBase {
         );
 
         String? cartId = cart?.id;
-        _CartSnapshot snapshot = const _CartSnapshot(items: <CartItemViewData>[]);
+        _CartSnapshot snapshot = const _CartSnapshot(
+          items: <CartItemViewData>[],
+        );
         if (cartId != null) {
           snapshot = await _traceAsyncSection<_CartSnapshot>(
             "loadInitialData.loadCartSnapshot",
@@ -134,21 +159,24 @@ mixin MenuFilterController on _OrderManagementControllerBase {
         logSession.addPersistentMetadata(<String, dynamic>{"cart_id": cartId});
 
         int menuCount = 0;
-        final List<MenuItemViewData> synchronisedMenu = _traceSyncSection<List<MenuItemViewData>>(
-          "loadInitialData.synchroniseMenu",
-          () {
-            final List<MenuItemViewData> list = _menuItemCache.values.toList()
-              ..sort(
-                (MenuItemViewData a, MenuItemViewData b) =>
-                    a.displayOrder.compareTo(b.displayOrder),
-              );
-            menuCount = list.length;
-            return list;
-          },
-          startArguments: () => <String, dynamic>{"cacheSize": _menuItemCache.length},
-          finishArguments: () => <String, dynamic>{"menuCount": menuCount},
-          logThreshold: const Duration(milliseconds: 2),
-        );
+        final List<MenuItemViewData> synchronisedMenu =
+            _traceSyncSection<List<MenuItemViewData>>(
+              "loadInitialData.synchroniseMenu",
+              () {
+                final List<MenuItemViewData> list =
+                    _menuItemCache.values.toList()..sort(
+                      (MenuItemViewData a, MenuItemViewData b) =>
+                          a.displayOrder.compareTo(b.displayOrder),
+                    );
+                menuCount = list.length;
+                return list;
+              },
+              startArguments: () => <String, dynamic>{
+                "cacheSize": _menuItemCache.length,
+              },
+              finishArguments: () => <String, dynamic>{"menuCount": menuCount},
+              logThreshold: const Duration(milliseconds: 2),
+            );
 
         final int safeIndex = categoryView.isEmpty
             ? 0
@@ -159,7 +187,9 @@ mixin MenuFilterController on _OrderManagementControllerBase {
           menuItems: synchronisedMenu,
           cartItems: snapshot.items,
           currentPaymentMethod:
-              snapshot.paymentMethod ?? cart?.paymentMethod ?? state.currentPaymentMethod,
+              snapshot.paymentMethod ??
+              cart?.paymentMethod ??
+              state.currentPaymentMethod,
           cartId: cartId,
           orderNumber: snapshot.orderNumber ?? cart?.orderNumber,
           discountAmount: snapshot.discountAmount ?? cart?.discountAmount ?? 0,
@@ -219,9 +249,15 @@ mixin MenuFilterController on _OrderManagementControllerBase {
           _logPerfLazy(() => "selectCategory.skip index=$index");
           return;
         }
-        state = state.copyWith(selectedCategoryIndex: index, clearErrorMessage: true);
+        state = state.copyWith(
+          selectedCategoryIndex: index,
+          clearErrorMessage: true,
+        );
       },
-      startArguments: () => <String, dynamic>{"from": previousIndex, "to": index},
+      startArguments: () => <String, dynamic>{
+        "from": previousIndex,
+        "to": index,
+      },
       finishArguments: () => <String, dynamic>{
         "changed": previousIndex != state.selectedCategoryIndex,
       },
@@ -246,7 +282,9 @@ mixin MenuFilterController on _OrderManagementControllerBase {
         "previousLength": previous.length,
         "nextLength": query.length,
       },
-      finishArguments: () => <String, dynamic>{"changed": previous != state.searchQuery},
+      finishArguments: () => <String, dynamic>{
+        "changed": previous != state.searchQuery,
+      },
       logThreshold: const Duration(milliseconds: 1),
     );
   }

@@ -1,9 +1,13 @@
 import "package:drift/drift.dart";
-import "package:drift/web.dart";
+import "package:drift/wasm.dart";
+import "package:sqlite3/wasm.dart";
 
 QueryExecutor createDatabaseConnection() {
-  return WebDatabase.withStorage(
-    DriftWebStorage.volatile(),
-    logStatements: false,
-  );
+  return LazyDatabase(() async {
+    final WasmSqlite3 sqlite3 = await WasmSqlite3.loadFromUrl(
+      Uri.parse("sqlite3.wasm"),
+    );
+    sqlite3.registerVirtualFileSystem(InMemoryFileSystem(), makeDefault: true);
+    return WasmDatabase.inMemory(sqlite3, logStatements: false);
+  });
 }

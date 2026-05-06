@@ -61,7 +61,10 @@ class EnvValidator {
   }
 
   /// 必須の環境変数リスト
-  static const List<String> _requiredVars = <String>["SUPABASE_URL", "SUPABASE_ANON_KEY"];
+  static const List<String> _requiredVars = <String>[
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+  ];
 
   /// オプションの環境変数リスト
   static const List<String> _optionalVars = <String>[
@@ -86,15 +89,21 @@ class EnvValidator {
   static const Map<String, String> _dartDefineDefaults = <String, String>{
     "SUPABASE_URL": String.fromEnvironment("SUPABASE_URL"),
     "SUPABASE_ANON_KEY": String.fromEnvironment("SUPABASE_ANON_KEY"),
-    "SUPABASE_OAUTH_CALLBACK_URL_DEV": String.fromEnvironment("SUPABASE_OAUTH_CALLBACK_URL_DEV"),
-    "SUPABASE_OAUTH_CALLBACK_URL_PROD": String.fromEnvironment("SUPABASE_OAUTH_CALLBACK_URL_PROD"),
+    "SUPABASE_OAUTH_CALLBACK_URL_DEV": String.fromEnvironment(
+      "SUPABASE_OAUTH_CALLBACK_URL_DEV",
+    ),
+    "SUPABASE_OAUTH_CALLBACK_URL_PROD": String.fromEnvironment(
+      "SUPABASE_OAUTH_CALLBACK_URL_PROD",
+    ),
     "SUPABASE_OAUTH_CALLBACK_URL_MOBILE": String.fromEnvironment(
       "SUPABASE_OAUTH_CALLBACK_URL_MOBILE",
     ),
     "SUPABASE_OAUTH_CALLBACK_URL_DESKTOP": String.fromEnvironment(
       "SUPABASE_OAUTH_CALLBACK_URL_DESKTOP",
     ),
-    "SUPABASE_AUTH_CALLBACK_URL": String.fromEnvironment("SUPABASE_AUTH_CALLBACK_URL"),
+    "SUPABASE_AUTH_CALLBACK_URL": String.fromEnvironment(
+      "SUPABASE_AUTH_CALLBACK_URL",
+    ),
     "DEBUG_MODE": String.fromEnvironment("DEBUG_MODE"),
     "LOG_LEVEL": String.fromEnvironment("LOG_LEVEL"),
     "LOG_DIR": String.fromEnvironment("LOG_DIR"),
@@ -104,21 +113,34 @@ class EnvValidator {
     "LOG_MAX_DISK_MB": String.fromEnvironment("LOG_MAX_DISK_MB"),
     "LOG_RETENTION_DAYS": String.fromEnvironment("LOG_RETENTION_DAYS"),
     "LOG_BACKPRESSURE": String.fromEnvironment("LOG_BACKPRESSURE"),
-    "ORDER_MANAGEMENT_PERF_TRACING": String.fromEnvironment("ORDER_MANAGEMENT_PERF_TRACING"),
-    "LOG_FATAL_FLUSH_BEFORE_HANDLERS": String.fromEnvironment("LOG_FATAL_FLUSH_BEFORE_HANDLERS"),
-    "LOG_FATAL_FLUSH_TIMEOUT_MS": String.fromEnvironment("LOG_FATAL_FLUSH_TIMEOUT_MS"),
-    "LOG_FATAL_HANDLER_TIMEOUT_MS": String.fromEnvironment("LOG_FATAL_HANDLER_TIMEOUT_MS"),
-    "LOG_FATAL_AUTO_SHUTDOWN": String.fromEnvironment("LOG_FATAL_AUTO_SHUTDOWN"),
+    "ORDER_MANAGEMENT_PERF_TRACING": String.fromEnvironment(
+      "ORDER_MANAGEMENT_PERF_TRACING",
+    ),
+    "LOG_FATAL_FLUSH_BEFORE_HANDLERS": String.fromEnvironment(
+      "LOG_FATAL_FLUSH_BEFORE_HANDLERS",
+    ),
+    "LOG_FATAL_FLUSH_TIMEOUT_MS": String.fromEnvironment(
+      "LOG_FATAL_FLUSH_TIMEOUT_MS",
+    ),
+    "LOG_FATAL_HANDLER_TIMEOUT_MS": String.fromEnvironment(
+      "LOG_FATAL_HANDLER_TIMEOUT_MS",
+    ),
+    "LOG_FATAL_AUTO_SHUTDOWN": String.fromEnvironment(
+      "LOG_FATAL_AUTO_SHUTDOWN",
+    ),
     "LOG_FATAL_EXIT_PROCESS": String.fromEnvironment("LOG_FATAL_EXIT_PROCESS"),
     "LOG_FATAL_EXIT_CODE": String.fromEnvironment("LOG_FATAL_EXIT_CODE"),
-    "LOG_FATAL_SHUTDOWN_DELAY_MS": String.fromEnvironment("LOG_FATAL_SHUTDOWN_DELAY_MS"),
+    "LOG_FATAL_SHUTDOWN_DELAY_MS": String.fromEnvironment(
+      "LOG_FATAL_SHUTDOWN_DELAY_MS",
+    ),
   };
 
   static Map<String, String> _cachedEnv = _initializeCachedEnv();
   static bool _fileFallbackAttempted = false;
 
   /// 現在利用可能な環境変数のスナップショット
-  static Map<String, String> get env => Map<String, String>.unmodifiable(_cachedEnv);
+  static Map<String, String> get env =>
+      Map<String, String>.unmodifiable(_cachedEnv);
 
   /// 環境変数を検証
   static EnvValidationResult validate() {
@@ -212,7 +234,8 @@ class EnvValidator {
           warnings.add("デスクトップ用コールバックURLの形式が不正です: $value");
         } else if (desktopUri.scheme != "http") {
           warnings.add("デスクトップ用コールバックURLは http スキームを推奨します: $value");
-        } else if (desktopUri.host != "localhost" && desktopUri.host != "127.0.0.1") {
+        } else if (desktopUri.host != "localhost" &&
+            desktopUri.host != "127.0.0.1") {
           warnings.add("デスクトップ用コールバックURLは localhost へのループバックを推奨します: $value");
         } else if (!desktopUri.hasPort) {
           warnings.add("デスクトップ用コールバックURLにポート番号を指定してください");
@@ -235,7 +258,9 @@ class EnvValidator {
           "fatal",
         ];
         if (!validLevels.contains(value.toLowerCase())) {
-          warnings.add("LOG_LEVELは ${validLevels.join(', ')} のいずれかである必要があります: $value");
+          warnings.add(
+            "LOG_LEVELは ${validLevels.join(', ')} のいずれかである必要があります: $value",
+          );
         }
         break;
 
@@ -251,9 +276,15 @@ class EnvValidator {
         break;
 
       case "LOG_BACKPRESSURE":
-        const List<String> validPolicies = <String>["drop-oldest", "drop-newest", "block"];
+        const List<String> validPolicies = <String>[
+          "drop-oldest",
+          "drop-newest",
+          "block",
+        ];
         if (!validPolicies.contains(value.toLowerCase())) {
-          warnings.add("LOG_BACKPRESSUREは ${validPolicies.join(', ')} のいずれかである必要があります: $value");
+          warnings.add(
+            "LOG_BACKPRESSUREは ${validPolicies.join(', ')} のいずれかである必要があります: $value",
+          );
         }
         break;
 
@@ -262,7 +293,9 @@ class EnvValidator {
             value.toLowerCase() != "false" &&
             value != "1" &&
             value != "0") {
-          warnings.add("ORDER_MANAGEMENT_PERF_TRACING は true/false (または 1/0) で指定してください: $value");
+          warnings.add(
+            "ORDER_MANAGEMENT_PERF_TRACING は true/false (または 1/0) で指定してください: $value",
+          );
         }
         break;
     }
@@ -364,14 +397,18 @@ class EnvValidator {
     final Map<String, String> dartDefineEnv = _readDartDefineEnvironment();
     Map<String, String> fileEnv = <String, String>{};
 
-    try {
-      await dotenv.load();
-      fileEnv = Map<String, String>.from(dotenv.env);
-      _log(".envファイルから${fileEnv.length}個の環境変数を読み込みました");
-    } on FlutterError catch (error, stackTrace) {
-      _log(".envファイルの読み込みに失敗しました", error, stackTrace);
-      // Flutterアセットとしての読み込みに失敗した場合は、直接ファイルからの読み込みを試みる
+    if (kIsWeb) {
       fileEnv = loadFromFile();
+    } else {
+      try {
+        await dotenv.load();
+        fileEnv = Map<String, String>.from(dotenv.env);
+        _log(".envファイルから${fileEnv.length}個の環境変数を読み込みました");
+      } on FlutterError catch (error, stackTrace) {
+        _log(".envファイルの読み込みに失敗しました", error, stackTrace);
+        // Flutterアセットとしての読み込みに失敗した場合は、直接ファイルからの読み込みを試みる
+        fileEnv = loadFromFile();
+      }
     }
 
     final Map<String, String> mergedEnv = mergeEnvironments(
@@ -458,20 +495,24 @@ class EnvValidator {
   static String get supabaseAnonKey => getEnv("SUPABASE_ANON_KEY");
 
   /// Supabase認証コールバックURL
-  static String get supabaseAuthCallbackUrl => getEnv("SUPABASE_AUTH_CALLBACK_URL");
+  static String get supabaseAuthCallbackUrl =>
+      getEnv("SUPABASE_AUTH_CALLBACK_URL");
 
   /// 開発用コールバックURL
-  static String get supabaseOAuthCallbackUrlDev => getEnv("SUPABASE_OAUTH_CALLBACK_URL_DEV");
+  static String get supabaseOAuthCallbackUrlDev =>
+      getEnv("SUPABASE_OAUTH_CALLBACK_URL_DEV");
 
   /// 本番用コールバックURL
-  static String get supabaseOAuthCallbackUrlProd => getEnv("SUPABASE_OAUTH_CALLBACK_URL_PROD");
+  static String get supabaseOAuthCallbackUrlProd =>
+      getEnv("SUPABASE_OAUTH_CALLBACK_URL_PROD");
 
   // =================================================================
   // ログ設定アクセサ（統合済み）
   // =================================================================
 
   /// デバッグモードの取得
-  static bool get debugMode => getBoolEnv("DEBUG_MODE", defaultValue: kDebugMode);
+  static bool get debugMode =>
+      getBoolEnv("DEBUG_MODE", defaultValue: kDebugMode);
 
   /// ログレベルの取得
   static String get logLevel => getEnv("LOG_LEVEL", defaultValue: "info");
@@ -480,25 +521,30 @@ class EnvValidator {
   static String get logDir => getEnv("LOG_DIR");
 
   /// ログフラッシュ間隔（ミリ秒）
-  static int get logFlushIntervalMs => getIntEnv("LOG_FLUSH_INTERVAL_MS", defaultValue: 3000);
+  static int get logFlushIntervalMs =>
+      getIntEnv("LOG_FLUSH_INTERVAL_MS", defaultValue: 3000);
 
   /// ログキューの最大サイズ
   static int get logMaxQueue => getIntEnv("LOG_MAX_QUEUE", defaultValue: 5000);
 
   /// ログファイルの最大サイズ（MB）
-  static int get logMaxFileSizeMb => getIntEnv("LOG_MAX_FILE_SIZE_MB", defaultValue: 5);
+  static int get logMaxFileSizeMb =>
+      getIntEnv("LOG_MAX_FILE_SIZE_MB", defaultValue: 5);
 
   /// ログの最大ディスク使用量（MB）
   static int get logMaxDiskMb => getIntEnv("LOG_MAX_DISK_MB", defaultValue: 50);
 
   /// ログ保持日数
-  static int get logRetentionDays => getIntEnv("LOG_RETENTION_DAYS", defaultValue: 10);
+  static int get logRetentionDays =>
+      getIntEnv("LOG_RETENTION_DAYS", defaultValue: 10);
 
   /// ログバックプレッシャーポリシー
-  static String get logBackpressure => getEnv("LOG_BACKPRESSURE", defaultValue: "drop-oldest");
+  static String get logBackpressure =>
+      getEnv("LOG_BACKPRESSURE", defaultValue: "drop-oldest");
 
   /// 注文管理トレーシングの有効状態
-  static bool get orderManagementPerfTracing => getBoolEnv("ORDER_MANAGEMENT_PERF_TRACING");
+  static bool get orderManagementPerfTracing =>
+      getBoolEnv("ORDER_MANAGEMENT_PERF_TRACING");
 
   // =================================================================
   // 代替環境ローダー機能（DotEnvLoader統合）
@@ -530,7 +576,8 @@ class EnvValidator {
     Map<String, String>? dartDefineEnv,
   }) {
     final Map<String, String> merged = <String, String>{};
-    final Map<String, String> defines = dartDefineEnv ?? _readDartDefineEnvironment();
+    final Map<String, String> defines =
+        dartDefineEnv ?? _readDartDefineEnvironment();
     final Map<String, String> baseEnv = systemEnv ?? _readSystemEnvironment();
 
     if (overrideSystem) {

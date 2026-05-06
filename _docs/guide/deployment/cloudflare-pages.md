@@ -60,7 +60,8 @@ Cloudflare Pages の Git integration を使って Cloudflare 側でビルドす�
 4. **Custom token** を選ぶ。
 5. token name に `GitHub Actions YATA Demo Pages Deploy` など用途が分かる名前を付ける。
 6. Permissions に次を設定する。
-   - Account / Cloudflare Pages / Edit
+   - Account / Pages / Write
+     - Dashboard 上の表示が `Cloudflare Pages / Edit` の場合はそれを選ぶ。
    - User / User Details / Read
 7. Account Resources は `yata-demo` を作成する対象アカウントに絞る。
 8. **Continue to summary** で内容を確認し、**Create Token** を実行する。
@@ -142,7 +143,8 @@ GitHub repository の Actions secrets に `CLOUDFLARE_API_TOKEN` が登録され
 確認すること:
 
 - `CLOUDFLARE_API_TOKEN` が古い token のままではない。
-- token permissions に `Account / Cloudflare Pages / Edit` が含まれている。
+- token permissions に `Account / Pages / Write` が含まれている。
+  - Dashboard 上の表示が `Cloudflare Pages / Edit` の場合はそれを選ぶ。
 - token permissions に `User / User Details / Read` が含まれている。
 - token の Account Resources が、`CLOUDFLARE_ACCOUNT_ID` の account を許可している。
 - `yata-demo` Pages project が、その `CLOUDFLARE_ACCOUNT_ID` の account 側に存在している。
@@ -153,7 +155,7 @@ token の権限は後から既存 token を細かく直すより、上記 permis
 診断結果の読み方:
 
 - `/user/tokens/verify` が失敗する: GitHub Secrets の `CLOUDFLARE_API_TOKEN` が無効、または古い。
-- `/accounts/<id>/pages/projects` が失敗する: token の Account Resources が `CLOUDFLARE_ACCOUNT_ID` の account を許可していない、または `Cloudflare Pages / Edit` が不足している。
+- `/accounts/<id>/pages/projects` が `403 Authentication error` で失敗する: token は有効だが、token の Account Resources が `CLOUDFLARE_ACCOUNT_ID` の account を許可していない、または `Account / Pages / Write` が不足している。この段階で失敗する場合、project name の問題ではない。
 - project list は成功するが `yata-demo` の GET が失敗する: project name が違う、または `yata-demo` が別 account にある。
 - project list は成功するが空: token/account は見えているが、その account に Pages project がまだない。
 
