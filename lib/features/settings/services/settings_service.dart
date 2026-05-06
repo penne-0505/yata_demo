@@ -1,7 +1,6 @@
 import "dart:async";
-import "dart:io";
-import "dart:math";
 
+import "package:flutter/foundation.dart";
 import "package:path_provider/path_provider.dart";
 
 import "../../../core/constants/exceptions/settings/settings_exception.dart";
@@ -12,6 +11,7 @@ import "../../../infra/logging/logger.dart" as app_logger;
 import "../../auth/services/auth_service.dart";
 import "../data/settings_repository.dart";
 import "../domain/app_settings.dart";
+import "settings_io.dart";
 
 /// アプリ全体の設定を管理するサービス。
 class SettingsService {
@@ -128,7 +128,10 @@ class SettingsService {
 
   /// デフォルトのログディレクトリパスを解決する。
   Future<String> resolveDefaultLogDirectory() async {
-    final Directory directory = await getApplicationSupportDirectory();
+    if (kIsWeb) {
+      return "";
+    }
+    final directory = await getApplicationSupportDirectory();
     return directory.path;
   }
 
@@ -201,36 +204,10 @@ class SettingsService {
   }
 
   Future<String?> _sanitizeDirectory(String? path) async {
-    if (path == null || path.isEmpty) {
-      return null;
-    }
-
-    final String normalized = path.trim();
-    if (normalized.isEmpty) {
-      return null;
-    }
-
-    final Directory directory = Directory(normalized).absolute;
     try {
-      if (!await directory.exists()) {
-        await directory.create(recursive: true);
-      }
-      await _writeProbeFile(directory);
+      return await sanitizeDirectory(path);
     } on Object catch (error) {
       throw SettingsException.validation("logDirectory", error.toString());
-    }
-    return directory.path;
-  }
-
-  Future<void> _writeProbeFile(Directory directory) async {
-    final int suffix = Random().nextInt(99999);
-    final Uri probeUri = directory.uri.resolve(".yata_probe_$suffix");
-    final File probe = File.fromUri(probeUri);
-    await probe.writeAsString("probe", flush: true);
-    try {
-      await probe.delete();
-    } on Object {
-      // ignore deletion failure
     }
   }
 }

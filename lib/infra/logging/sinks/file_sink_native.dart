@@ -4,67 +4,9 @@ import "dart:io";
 import "package:flutter/foundation.dart";
 import "package:path_provider/path_provider.dart";
 
-import "log_config.dart";
-import "policies.dart";
-
-abstract class LogSink<T> {
-  Future<void> add(T data);
-  Future<void> flush();
-  Future<void> close();
-}
-
-class ConsoleSink implements LogSink<String> {
-  ConsoleSink() : _isEnabled = _detectConsoleAvailability();
-
-  bool _isEnabled;
-  bool _reportedFailure = false;
-
-  static bool _detectConsoleAvailability() {
-    try {
-      return stdout.hasTerminal;
-    } on Object {
-      return false;
-    }
-  }
-
-  void _handleWriteFailure(Object error, StackTrace stackTrace) {
-    _isEnabled = false;
-    if (!_reportedFailure && kDebugMode) {
-      _reportedFailure = true;
-      debugPrint("ConsoleSink disabled: $error");
-      debugPrintStack(stackTrace: stackTrace);
-    }
-  }
-
-  @override
-  Future<void> add(String data) async {
-    if (!_isEnabled) {
-      return;
-    }
-    try {
-      stdout.writeln(data);
-    } on Object catch (error, stackTrace) {
-      _handleWriteFailure(error, stackTrace);
-    }
-  }
-
-  @override
-  Future<void> flush() async {
-    if (!_isEnabled) {
-      return;
-    }
-    try {
-      await stdout.flush();
-    } on Object catch (error, stackTrace) {
-      _handleWriteFailure(error, stackTrace);
-    }
-  }
-
-  @override
-  Future<void> close() async {
-    _isEnabled = false;
-  }
-}
+import "../log_config.dart";
+import "../policies.dart";
+import "sink.dart";
 
 class FileSink implements LogSink<String> {
   FileSink(this._config)
@@ -244,7 +186,7 @@ class FileSink implements LogSink<String> {
 
       // Retention after rotation
       try {
-        await _retention.apply(dir, _baseName);
+        await _retention.apply(dir.path, _baseName);
       } catch (e) {
         lastError = e;
         // warn once

@@ -1,4 +1,4 @@
-import "dart:io";
+import "package:flutter/foundation.dart";
 
 import "log_event.dart";
 import "log_level.dart";
@@ -47,7 +47,7 @@ class ConsolePrettyFormatter implements Formatter<String> {
 
     final String withErr = _appendErrorAndStack(base, event);
 
-    if (useColor && stdout.supportsAnsiEscapes) {
+    if (useColor && !kIsWeb) {
       final String color = _ansi[event.lvl] ?? "";
       const String reset = "\x1B[0m";
       return "$color$withErr$reset";

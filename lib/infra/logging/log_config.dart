@@ -1,4 +1,3 @@
-import "dart:io";
 import "package:flutter/foundation.dart";
 
 import "log_level.dart";
@@ -191,7 +190,7 @@ class LogConfig {
 
   static LogConfig defaults({required String fileDirPath}) {
     final bool release = _isRelease();
-    final bool supportsColor = stdout.supportsAnsiEscapes;
+    final bool supportsColor = !kIsWeb;
     return LogConfig(
       globalLevel: release ? LogLevel.info : LogLevel.debug,
       consoleEnabled: true,

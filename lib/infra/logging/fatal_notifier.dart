@@ -1,5 +1,6 @@
 import "dart:async";
-import "dart:io";
+
+import "package:flutter/foundation.dart";
 
 import "../../core/contracts/logging/logger.dart" as contract;
 
@@ -53,6 +54,6 @@ class StdoutFatalNotifier extends FatalNotifier {
     if (includeError && context.stackTrace != null) {
       buffer.write("\n${context.stackTrace}");
     }
-    stderr.writeln(buffer.toString());
+    debugPrint(buffer.toString());
   }
 }

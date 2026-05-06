@@ -73,6 +73,30 @@ Supabase 経路を明示的に使う場合:
 
 既存の `CsvExportService` は維持し、repository と job log をデモ経路で `LocalCsvExportRepository` / `LocalCsvExportJobsRepository` に差し替えています。Supabase RPC は使いません。
 
+## Web 版のビルドとデプロイ
+
+ブラウザからデモを試せる Web 版をビルドできます。
+
+```bash
+.fvm/flutter_sdk/bin/flutter build web --release --dart-define=YATA_DEMO_MODE=true
+```
+
+ビルド成果物は `build/web/` に出力されます。
+
+### 注意事項
+
+- **レスポンシブ対応はしていません**。本アプリはタブレットなどでの使用を見越して開発したため、PC ブラウザでの使用を前提としています。スマートフォンでの表示はスコープ外です。
+- **Web 版はインメモリ DB** を使用します。ページをリロードするとデモデータが初期状態に戻ります。
+- **ログ出力は Console のみ** です。ファイルログは出力されません。
+
+### Cloudflare Pages へのデプロイ
+
+詳細は `_docs/guide/deployment/cloudflare-pages.md` を参照してください。GitHub Actions で自動デプロイする場合：
+
+1. Cloudflare Dashboard で API トークンを作成
+2. GitHub リポジトリの Secrets に `CLOUDFLARE_API_TOKEN` と `CLOUDFLARE_ACCOUNT_ID` を設定
+3. `.github/workflows/deploy-web.yml` が push 時に自動実行されます
+
 ## 検証
 
 ```bash

@@ -1,4 +1,5 @@
 import "package:file_picker/file_picker.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
@@ -153,15 +154,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 child: _DebugSection(controller: controller, state: state),
               ),
               const SizedBox(height: YataSpacingTokens.lg),
-              _DisabledDemoSettingsSection(
-                child: _LogDirectorySection(
-                  controller: controller,
-                  status: state.logDirectoryStatus,
-                  settings: state.settings,
-                  defaultDirectoryFuture: _defaultLogDirectoryFuture,
-                  onPickDirectory: () => _pickLogDirectory(controller),
+              if (!kIsWeb)
+                _DisabledDemoSettingsSection(
+                  child: _LogDirectorySection(
+                    controller: controller,
+                    status: state.logDirectoryStatus,
+                    settings: state.settings,
+                    defaultDirectoryFuture: _defaultLogDirectoryFuture,
+                    onPickDirectory: () => _pickLogDirectory(controller),
+                  ),
                 ),
-              ),
             ],
           ),
         ),

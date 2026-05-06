@@ -105,7 +105,7 @@ class CompositeRotation implements RotationPolicy {
 abstract class RetentionPolicy {
   String get name;
 
-  Future<void> apply(Directory dir, String baseName);
+  Future<void> apply(String dirPath, String baseName);
 }
 
 class NoRetention implements RetentionPolicy {
@@ -115,7 +115,7 @@ class NoRetention implements RetentionPolicy {
   String get name => "none";
 
   @override
-  Future<void> apply(Directory dir, String baseName) async {}
+  Future<void> apply(String dirPath, String baseName) async {}
 }
 
 class MaxFiles implements RetentionPolicy {
@@ -126,7 +126,8 @@ class MaxFiles implements RetentionPolicy {
   String get name => "max_files";
 
   @override
-  Future<void> apply(Directory dir, String baseName) async {
+  Future<void> apply(String dirPath, String baseName) async {
+    final Directory dir = Directory(dirPath);
     final List<FileSystemEntity> all = dir.existsSync() ? dir.listSync() : <FileSystemEntity>[];
     final RegExp re = RegExp("^${RegExp.escape(baseName)}-\\d{8}-\\d{2}\\.log\$");
     final List<File> files =
@@ -154,7 +155,8 @@ class MaxDays implements RetentionPolicy {
   String get name => "max_days";
 
   @override
-  Future<void> apply(Directory dir, String baseName) async {
+  Future<void> apply(String dirPath, String baseName) async {
+    final Directory dir = Directory(dirPath);
     if (!dir.existsSync()) {
       return;
     }
@@ -188,9 +190,9 @@ class CompositeRetention implements RetentionPolicy {
   String get name => "composite";
 
   @override
-  Future<void> apply(Directory dir, String baseName) async {
+  Future<void> apply(String dirPath, String baseName) async {
     for (final RetentionPolicy p in policies) {
-      await p.apply(dir, baseName);
+      await p.apply(dirPath, baseName);
     }
   }
 }

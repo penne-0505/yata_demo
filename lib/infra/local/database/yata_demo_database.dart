@@ -1,5 +1,4 @@
 import "package:drift/drift.dart";
-import "package:drift_flutter/drift_flutter.dart";
 
 import "../../../core/constants/enums.dart";
 import "type_converters.dart";
@@ -304,8 +303,7 @@ class DemoSeedMarkers extends Table {
   ],
 )
 class YataDemoDatabase extends _$YataDemoDatabase {
-  YataDemoDatabase([QueryExecutor? executor])
-    : super(executor ?? driftDatabase(name: "yata_demo"));
+  YataDemoDatabase(QueryExecutor executor) : super(executor);
 
   @override
   int get schemaVersion => 2;

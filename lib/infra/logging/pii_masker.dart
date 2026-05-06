@@ -1,5 +1,4 @@
 import "dart:convert";
-import "dart:io";
 import "dart:math";
 import "dart:typed_data";
 
@@ -140,12 +139,43 @@ class PiiMasker implements Interceptor {
     final RegExp candidate = RegExp(r"\b[0-9A-Fa-f:\.]{3,}\b");
     return s.replaceAllMapped(candidate, (Match m) {
       final String g = m.group(0)!;
-      final InternetAddress? ip = InternetAddress.tryParse(g);
-      if (ip != null) {
-        return _maskToken(g);
+      try {
+        // ignore: avoid_dynamic_calls
+        final dynamic ip = _tryParseIp(g);
+        if (ip != null) {
+          return _maskToken(g);
+        }
+      } on Object {
+        // IP パースがサポートされていない環境ではスキップ
       }
       return g;
     });
+  }
+
+  static dynamic _tryParseIp(String g) {
+    // dart:io の InternetAddress.tryParse は Web では利用できないため、
+    // 簡易的な IP 形式チェックで代替する。
+    final RegExp ipv4 = RegExp(
+      r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$",
+    );
+    final Match? m4 = ipv4.firstMatch(g);
+    if (m4 != null) {
+      for (int i = 1; i <= 4; i++) {
+        final int? octet = int.tryParse(m4.group(i)!);
+        if (octet == null || octet < 0 || octet > 255) {
+          return null;
+        }
+      }
+      return g;
+    }
+    // IPv6 の簡易チェック
+    if (g.contains(":")) {
+      final List<String> parts = g.split(":");
+      if (parts.length >= 2 && parts.length <= 8) {
+        return g;
+      }
+    }
+    return null;
   }
 
   String _maskToken(String token) => switch (mode) {

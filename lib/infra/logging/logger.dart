@@ -1,6 +1,5 @@
 import "dart:async";
 import "dart:collection";
-import "dart:io";
 import "dart:math";
 
 // PlatformDispatcher is available via flutter foundation exports
@@ -9,6 +8,8 @@ import "package:flutter/foundation.dart";
 import "../../core/contracts/logging/logger.dart" as contract;
 import "../../core/logging/levels.dart" as core_level;
 import "context.dart";
+import "exit_native.dart"
+  if (dart.library.js_interop) "exit_web.dart";
 import "fatal_notifier.dart";
 import "formatters.dart";
 import "log_config.dart";
@@ -16,7 +17,9 @@ import "log_event.dart";
 import "log_fields_builder.dart";
 import "log_level.dart";
 import "pii_masker.dart";
-import "sinks.dart";
+import "sinks/console_sink.dart";
+import "sinks/file_sink.dart";
+import "sinks/sink.dart";
 
 typedef MsgThunk = String Function();
 typedef FieldsThunk = Map<String, dynamic> Function();
@@ -337,8 +340,8 @@ class _LoggerCore {
       try {
         await _process(p);
       } catch (e, st) {
-        // Last-resort: write minimal diagnostic to stderr; do not recurse into logger.
-        stderr.writeln("Logger pipeline error: $e\n$st");
+        // Last-resort: write minimal diagnostic; do not recurse into logger.
+        debugPrint("Logger pipeline error: $e\n$st");
       }
     }
     _draining = false;
@@ -452,9 +455,9 @@ class _LoggerCore {
               await task;
             }
           } on TimeoutException catch (_) {
-            stderr.writeln("Fatal handler timeout after ${handlerTimeout.inMilliseconds}ms");
+            debugPrint("Fatal handler timeout after ${handlerTimeout.inMilliseconds}ms");
           } catch (err, st) {
-            stderr.writeln("Fatal handler error: $err\n$st");
+            debugPrint("Fatal handler error: $err\n$st");
           }
         }
       }
@@ -490,11 +493,11 @@ class _LoggerCore {
       }
       await future.timeout(timeout);
     } on TimeoutException catch (_) {
-      stderr.writeln(
+      debugPrint(
         "Logger flush timed out while handling fatal after ${timeout.inMilliseconds}ms",
       );
     } catch (err, st) {
-      stderr.writeln("Logger flush error while handling fatal: $err\n$st");
+      debugPrint("Logger flush error while handling fatal: $err\n$st");
     }
   }
 
@@ -510,7 +513,7 @@ class _LoggerCore {
       if (delay > Duration.zero) {
         await Future<void>.delayed(delay);
       }
-      exit(exitCode);
+      exitApp(exitCode);
     }
   }
 

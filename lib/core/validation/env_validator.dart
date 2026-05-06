@@ -1,7 +1,7 @@
-import "dart:io";
-
 import "package:flutter/foundation.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
+
+import "env_platform.dart";
 
 /// 環境変数の検証結果
 class EnvValidationResult {
@@ -287,7 +287,7 @@ class EnvValidator {
         warnings.add("Web開発環境では localhost のコールバックURLが推奨されます");
       }
     } else {
-      final String platform = Platform.operatingSystem;
+      final String platform = defaultTargetPlatform.name;
       info
         ..add("💻 プラットフォーム: $platform")
         ..add("📱 カスタムスキーム: com.example.yata://login (自動設定)");
@@ -509,45 +509,12 @@ class EnvValidator {
   /// [path] .envファイルのパス（オプション、デフォルトは ".env"）
   /// 戻り値: 環境変数のMap
   static Map<String, String> loadFromFile({String? path}) {
-    final File file = File(path ?? ".env");
-    if (!file.existsSync()) {
-      _log(".envファイルが見つかりません: ${file.path}");
-      return <String, String>{};
+    final Map<String, String> env = loadEnvFromFile(path: path);
+    if (env.isEmpty) {
+      _log(".envファイルが見つからないか、空です: ${path ?? '.env'}");
+    } else {
+      _log("${env.length}個の環境変数を読み込みました: ${path ?? '.env'}");
     }
-
-    final Map<String, String> env = <String, String>{};
-    try {
-      final List<String> lines = file.readAsLinesSync();
-      for (final String raw in lines) {
-        final String line = raw.trim();
-
-        // 空行またはコメント行をスキップ
-        if (line.isEmpty || line.startsWith("#")) {
-          continue;
-        }
-
-        // KEY=VALUE 形式の解析
-        final int idx = line.indexOf("=");
-        if (idx <= 0) {
-          continue;
-        }
-
-        final String key = line.substring(0, idx).trim();
-        String value = line.substring(idx + 1).trim();
-
-        // ダブルクォート除去
-        if (value.startsWith('"') && value.endsWith('"') && value.length >= 2) {
-          value = value.substring(1, value.length - 1);
-        }
-
-        env[key] = value;
-      }
-
-      _log("${env.length}個の環境変数を読み込みました: ${file.path}");
-    } catch (e, stackTrace) {
-      _log(".envファイルの読み込みエラー: ${file.path}", e, stackTrace);
-    }
-
     return env;
   }
 
@@ -603,7 +570,7 @@ class EnvValidator {
 
   static Map<String, String> _readSystemEnvironment() {
     try {
-      return Map<String, String>.from(Platform.environment);
+      return readSystemEnvironment();
     } on UnsupportedError catch (error, stackTrace) {
       _log("システム環境変数へのアクセスがサポートされていないプラットフォームです", error, stackTrace);
       return <String, String>{};
