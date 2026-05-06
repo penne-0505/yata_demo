@@ -137,6 +137,8 @@ GitHub repository の Actions secrets に `CLOUDFLARE_API_TOKEN` が登録され
 
 `/accounts/***/pages/projects/yata-demo` への request で `Authentication error [code: 10000]` が出る場合、ビルドではなく Cloudflare API Token の権限か account/project の紐づきが原因。
 
+`.github/workflows/deploy-web.yml` には `Verify Cloudflare Pages access` step を入れている。この step は token 自体、対象 account の Pages project list、`yata-demo` project の取得を順に確認する。ここで落ちた endpoint が原因箇所になる。
+
 確認すること:
 
 - `CLOUDFLARE_API_TOKEN` が古い token のままではない。
@@ -147,6 +149,13 @@ GitHub repository の Actions secrets に `CLOUDFLARE_API_TOKEN` が登録され
 - GitHub Secrets の `CLOUDFLARE_ACCOUNT_ID` に別 account の ID を入れていない。
 
 token の権限は後から既存 token を細かく直すより、上記 permissions で作り直して GitHub Secrets の `CLOUDFLARE_API_TOKEN` を差し替える方が確実。
+
+診断結果の読み方:
+
+- `/user/tokens/verify` が失敗する: GitHub Secrets の `CLOUDFLARE_API_TOKEN` が無効、または古い。
+- `/accounts/<id>/pages/projects` が失敗する: token の Account Resources が `CLOUDFLARE_ACCOUNT_ID` の account を許可していない、または `Cloudflare Pages / Edit` が不足している。
+- project list は成功するが `yata-demo` の GET が失敗する: project name が違う、または `yata-demo` が別 account にある。
+- project list は成功するが空: token/account は見えているが、その account に Pages project がまだない。
 
 ### `build/web` が見つからない
 
