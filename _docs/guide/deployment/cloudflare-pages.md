@@ -61,15 +61,20 @@ Cloudflare Pages の Git integration を使って Cloudflare 側でビルドす�
 5. token name に `GitHub Actions YATA Demo Pages Deploy` など用途が分かる名前を付ける。
 6. Permissions に次を設定する。
    - Account / Cloudflare Pages / Edit
-7. Account Resources は対象アカウントに絞る。
+   - User / User Details / Read
+7. Account Resources は `yata-demo` を作成する対象アカウントに絞る。
 8. **Continue to summary** で内容を確認し、**Create Token** を実行する。
 9. 表示された token を控える。
 
 API Token は再表示できない。GitHub Secrets に登録した後は、ローカルファイルやドキュメントに残さない。
 
+token 作成後、Cloudflare の token 一覧で **Test** を実行し、有効な token として検証できることを確認する。
+
 ### 3. Cloudflare Account ID を確認する
 
 Cloudflare Dashboard で対象アカウントを開き、Account ID を確認する。表示位置は Cloudflare Dashboard の UI 変更で変わることがあるが、Workers & Pages やアカウント概要の API / Account details 周辺に表示される。
+
+Account ID は、API Token の Account Resources で許可したアカウントと一致している必要がある。複数アカウントを持っている場合、ここがずれると Wrangler はログイン済み表示になっても Pages project の取得で `Authentication error [code: 10000]` になる。
 
 ### 4. GitHub Secrets を登録する
 
@@ -130,7 +135,18 @@ GitHub repository の Actions secrets に `CLOUDFLARE_API_TOKEN` が登録され
 
 ### Cloudflare Pages の権限エラーになる
 
-API Token の permission が不足している可能性がある。Cloudflare Dashboard で token を作り直し、Account / Cloudflare Pages / Edit が含まれていることを確認する。
+`/accounts/***/pages/projects/yata-demo` への request で `Authentication error [code: 10000]` が出る場合、ビルドではなく Cloudflare API Token の権限か account/project の紐づきが原因。
+
+確認すること:
+
+- `CLOUDFLARE_API_TOKEN` が古い token のままではない。
+- token permissions に `Account / Cloudflare Pages / Edit` が含まれている。
+- token permissions に `User / User Details / Read` が含まれている。
+- token の Account Resources が、`CLOUDFLARE_ACCOUNT_ID` の account を許可している。
+- `yata-demo` Pages project が、その `CLOUDFLARE_ACCOUNT_ID` の account 側に存在している。
+- GitHub Secrets の `CLOUDFLARE_ACCOUNT_ID` に別 account の ID を入れていない。
+
+token の権限は後から既存 token を細かく直すより、上記 permissions で作り直して GitHub Secrets の `CLOUDFLARE_API_TOKEN` を差し替える方が確実。
 
 ### `build/web` が見つからない
 
