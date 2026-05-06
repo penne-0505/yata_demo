@@ -21,6 +21,8 @@ import "../utils/inventory_copy_formatter.dart";
 import "../widgets/inventory_category_panel.dart";
 import "../widgets/inventory_management_header.dart";
 
+const Color _inventoryManagementDialogBarrierColor = Color(0x260F172A);
+
 /// 在庫管理画面。
 class InventoryManagementPage extends ConsumerStatefulWidget {
   const InventoryManagementPage({super.key});
@@ -28,10 +30,12 @@ class InventoryManagementPage extends ConsumerStatefulWidget {
   static const String routeName = "/inventory";
 
   @override
-  ConsumerState<InventoryManagementPage> createState() => _InventoryManagementPageState();
+  ConsumerState<InventoryManagementPage> createState() =>
+      _InventoryManagementPageState();
 }
 
-class _InventoryManagementPageState extends ConsumerState<InventoryManagementPage>
+class _InventoryManagementPageState
+    extends ConsumerState<InventoryManagementPage>
     with RouteAwareRefreshMixin<InventoryManagementPage> {
   final TextEditingController _searchController = TextEditingController();
   final GlobalKey _tableKey = GlobalKey();
@@ -121,7 +125,9 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
 
   @override
   Widget build(BuildContext context) {
-    final InventoryManagementState state = ref.watch(inventoryManagementControllerProvider);
+    final InventoryManagementState state = ref.watch(
+      inventoryManagementControllerProvider,
+    );
     final InventoryManagementController controller = ref.watch(
       inventoryManagementControllerProvider.notifier,
     );
@@ -145,7 +151,11 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
             icon: Icons.receipt_long_outlined,
             onTap: () => context.go("/history"),
           ),
-          const YataNavItem(label: "在庫管理", icon: Icons.inventory_2_outlined, isActive: true),
+          const YataNavItem(
+            label: "在庫管理",
+            icon: Icons.inventory_2_outlined,
+            isActive: true,
+          ),
           YataNavItem(
             label: "メニュー管理",
             icon: Icons.restaurant_menu_outlined,
@@ -177,11 +187,16 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
             const SizedBox(height: YataSpacingTokens.lg),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
-              child: state.isLoading ? const LinearProgressIndicator() : const SizedBox.shrink(),
+              child: state.isLoading
+                  ? const LinearProgressIndicator()
+                  : const SizedBox.shrink(),
             ),
             if (state.isLoading) const SizedBox(height: YataSpacingTokens.md),
             if (state.errorMessage != null) ...<Widget>[
-              _ErrorBanner(message: state.errorMessage!, onRetry: controller.refresh),
+              _ErrorBanner(
+                message: state.errorMessage!,
+                onRetry: controller.refresh,
+              ),
               const SizedBox(height: YataSpacingTokens.md),
             ],
             InventoryManagementHeader(
@@ -202,7 +217,8 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
                 final List<InventoryItemViewData> attentionItems = state.items
                     .where(
                       (InventoryItemViewData item) =>
-                          item.status == StockStatus.low || item.status == StockStatus.critical,
+                          item.status == StockStatus.low ||
+                          item.status == StockStatus.critical,
                     )
                     .toList(growable: false);
 
@@ -299,9 +315,13 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
     await showDialog<void>(
       context: context,
       barrierDismissible: !isSaving,
+      barrierColor: _inventoryManagementDialogBarrierColor,
       builder: (BuildContext dialogContext) => StatefulBuilder(
-        builder: (BuildContext context, void Function(void Function()) setDialogState) =>
-            AlertDialog(
+        builder:
+            (
+              BuildContext context,
+              void Function(void Function()) setDialogState,
+            ) => AlertDialog(
               title: const Text("カテゴリを追加"),
               content: Form(
                 key: formKey,
@@ -320,7 +340,9 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
               ),
               actions: <Widget>[
                 TextButton(
-                  onPressed: isSaving ? null : () => Navigator.of(dialogContext).pop(),
+                  onPressed: isSaving
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
                   child: const Text("キャンセル"),
                 ),
                 FilledButton(
@@ -333,25 +355,24 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
 
                           setDialogState(() => isSaving = true);
 
-                          final String? errorMessage = await controller.createCategory(
-                            nameController.text,
-                          );
+                          final String? errorMessage = await controller
+                              .createCategory(nameController.text);
 
                           if (!mounted || !dialogContext.mounted) {
                             return;
                           }
 
                           if (errorMessage != null) {
-                            ScaffoldMessenger.of(
-                              context,
-                            ).showSnackBar(SnackBar(content: Text(errorMessage)));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(errorMessage)),
+                            );
                             setDialogState(() => isSaving = false);
                             return;
                           }
 
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(const SnackBar(content: Text("カテゴリを追加しました")));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("カテゴリを追加しました")),
+                          );
 
                           created = true;
                           Navigator.of(dialogContext).pop();
@@ -372,7 +393,9 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
       return;
     }
 
-    final String? newName = await _showRenameCategoryDialog(initialName: data.name);
+    final String? newName = await _showRenameCategoryDialog(
+      initialName: data.name,
+    );
     if (newName == null) {
       return;
     }
@@ -381,18 +404,25 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
       inventoryManagementControllerProvider.notifier,
     );
 
-    final String? errorMessage = await controller.renameCategory(data.categoryId!, newName);
+    final String? errorMessage = await controller.renameCategory(
+      data.categoryId!,
+      newName,
+    );
 
     if (!mounted) {
       return;
     }
 
     if (errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage)));
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("カテゴリ名を「$newName」に変更しました")));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text("カテゴリ名を「$newName」に変更しました")));
   }
 
   Future<void> _handleDeleteCategory(InventoryCategoryPanelData data) async {
@@ -412,6 +442,7 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
 
     final bool? confirmed = await showDialog<bool>(
       context: context,
+      barrierColor: _inventoryManagementDialogBarrierColor,
       builder: (BuildContext dialogContext) => AlertDialog(
         title: const Text("カテゴリを削除"),
         content: Text("「${data.name}」を削除しますか？この操作は取り消せません。"),
@@ -422,7 +453,9 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(foregroundColor: YataColorTokens.danger),
+            style: TextButton.styleFrom(
+              foregroundColor: YataColorTokens.danger,
+            ),
             child: const Text("削除"),
           ),
         ],
@@ -437,22 +470,32 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
       inventoryManagementControllerProvider.notifier,
     );
 
-    final String? errorMessage = await controller.deleteCategory(data.categoryId!);
+    final String? errorMessage = await controller.deleteCategory(
+      data.categoryId!,
+    );
 
     if (!mounted) {
       return;
     }
 
     if (errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage)));
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("${data.name} を削除しました")));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text("${data.name} を削除しました")));
   }
 
-  Future<String?> _showRenameCategoryDialog({required String initialName}) async {
-    final TextEditingController nameController = TextEditingController(text: initialName);
+  Future<String?> _showRenameCategoryDialog({
+    required String initialName,
+  }) async {
+    final TextEditingController nameController = TextEditingController(
+      text: initialName,
+    );
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
     bool isSaving = false;
     String? result;
@@ -460,9 +503,13 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
     await showDialog<void>(
       context: context,
       barrierDismissible: !isSaving,
+      barrierColor: _inventoryManagementDialogBarrierColor,
       builder: (BuildContext dialogContext) => StatefulBuilder(
-        builder: (BuildContext context, void Function(void Function()) setDialogState) =>
-            AlertDialog(
+        builder:
+            (
+              BuildContext context,
+              void Function(void Function()) setDialogState,
+            ) => AlertDialog(
               title: const Text("カテゴリ名を変更"),
               content: Form(
                 key: formKey,
@@ -484,7 +531,9 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
               ),
               actions: <Widget>[
                 TextButton(
-                  onPressed: isSaving ? null : () => Navigator.of(dialogContext).pop(),
+                  onPressed: isSaving
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
                   child: const Text("キャンセル"),
                 ),
                 FilledButton(
@@ -509,8 +558,12 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
     return result;
   }
 
-  Future<void> _showInventoryItemDialog({InventoryItemViewData? initialItem}) async {
-    final InventoryManagementState snapshot = ref.read(inventoryManagementControllerProvider);
+  Future<void> _showInventoryItemDialog({
+    InventoryItemViewData? initialItem,
+  }) async {
+    final InventoryManagementState snapshot = ref.read(
+      inventoryManagementControllerProvider,
+    );
     final InventoryManagementController controller = ref.read(
       inventoryManagementControllerProvider.notifier,
     );
@@ -519,21 +572,33 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
 
-    List<DropdownMenuItem<String>> buildCategoryItems(InventoryManagementState state) {
+    List<DropdownMenuItem<String>> buildCategoryItems(
+      InventoryManagementState state,
+    ) {
       final List<DropdownMenuItem<String>> items = state.categoryEntities
-          .where((inventory_models.MaterialCategory category) => category.id != null)
+          .where(
+            (inventory_models.MaterialCategory category) => category.id != null,
+          )
           .map(
             (inventory_models.MaterialCategory category) =>
-                DropdownMenuItem<String>(value: category.id!, child: Text(category.name)),
+                DropdownMenuItem<String>(
+                  value: category.id!,
+                  child: Text(category.name),
+                ),
           )
           .toList(growable: true);
 
       if (initialItem != null &&
           initialItem.categoryId.isNotEmpty &&
-          items.every((DropdownMenuItem<String> item) => item.value != initialItem.categoryId)) {
+          items.every(
+            (DropdownMenuItem<String> item) =>
+                item.value != initialItem.categoryId,
+          )) {
         items.add(
           DropdownMenuItem<String>(
             value: initialItem.categoryId,
@@ -568,7 +633,9 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
     String? selectedCategoryId = initialItem?.categoryId;
     if (selectedCategoryId == null ||
         selectedCategoryId.isEmpty ||
-        categoryItems.every((DropdownMenuItem<String> item) => item.value != selectedCategoryId)) {
+        categoryItems.every(
+          (DropdownMenuItem<String> item) => item.value != selectedCategoryId,
+        )) {
       selectedCategoryId = categoryItems.first.value;
     }
     UnitType selectedUnit = initialItem?.unitType ?? UnitType.piece;
@@ -583,10 +650,14 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
       text: initialItem != null ? formatNumber(initialItem.current) : "0",
     );
     final TextEditingController alertController = TextEditingController(
-      text: initialItem != null ? formatNumber(initialItem.alertThreshold) : "0",
+      text: initialItem != null
+          ? formatNumber(initialItem.alertThreshold)
+          : "0",
     );
     final TextEditingController criticalController = TextEditingController(
-      text: initialItem != null ? formatNumber(initialItem.criticalThreshold) : "0",
+      text: initialItem != null
+          ? formatNumber(initialItem.criticalThreshold)
+          : "0",
     );
     final TextEditingController notesController = TextEditingController(
       text: initialItem?.notes ?? "",
@@ -598,9 +669,13 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
     await showDialog<void>(
       context: context,
       barrierDismissible: !isSaving,
+      barrierColor: _inventoryManagementDialogBarrierColor,
       builder: (BuildContext dialogContext) => StatefulBuilder(
-        builder: (BuildContext context, void Function(void Function()) setDialogState) =>
-            AlertDialog(
+        builder:
+            (
+              BuildContext context,
+              void Function(void Function()) setDialogState,
+            ) => AlertDialog(
               title: Text(initialItem == null ? "在庫を追加" : "在庫を編集"),
               content: SizedBox(
                 width: 420,
@@ -631,7 +706,9 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
                           onChanged: isSaving
                               ? null
                               : (String? value) {
-                                  setDialogState(() => selectedCategoryId = value);
+                                  setDialogState(
+                                    () => selectedCategoryId = value,
+                                  );
                                 },
                           validator: (String? value) {
                             if (value == null || value.isEmpty) {
@@ -646,19 +723,26 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
                             onPressed: isSaving
                                 ? null
                                 : () async {
-                                    final bool created = await _showCreateCategoryDialog();
-                                    if (!created || !mounted || !dialogContext.mounted) {
+                                    final bool created =
+                                        await _showCreateCategoryDialog();
+                                    if (!created ||
+                                        !mounted ||
+                                        !dialogContext.mounted) {
                                       return;
                                     }
 
-                                    final InventoryManagementState refreshedState = ref.read(
+                                    final InventoryManagementState
+                                    refreshedState = ref.read(
                                       inventoryManagementControllerProvider,
                                     );
 
                                     setDialogState(() {
-                                      categoryItems = buildCategoryItems(refreshedState);
+                                      categoryItems = buildCategoryItems(
+                                        refreshedState,
+                                      );
                                       if (categoryItems.isNotEmpty) {
-                                        selectedCategoryId = categoryItems.last.value;
+                                        selectedCategoryId =
+                                            categoryItems.last.value;
                                       }
                                     });
                                   },
@@ -690,11 +774,17 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
                         const SizedBox(height: YataSpacingTokens.md),
                         TextFormField(
                           controller: quantityController,
-                          decoration: InputDecoration(labelText: "現在在庫(${selectedUnit.symbol})"),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: InputDecoration(
+                            labelText: "現在在庫(${selectedUnit.symbol})",
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           enabled: !isSaving,
                           validator: (String? value) {
-                            final double? parsed = double.tryParse(value?.trim() ?? "");
+                            final double? parsed = double.tryParse(
+                              value?.trim() ?? "",
+                            );
                             if (parsed == null || parsed < 0) {
                               return "0以上の数値を入力してください";
                             }
@@ -705,10 +795,14 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
                         TextFormField(
                           controller: alertController,
                           decoration: const InputDecoration(labelText: "警告閾値"),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           enabled: !isSaving,
                           validator: (String? value) {
-                            final double? parsed = double.tryParse(value?.trim() ?? "");
+                            final double? parsed = double.tryParse(
+                              value?.trim() ?? "",
+                            );
                             if (parsed == null || parsed < 0) {
                               return "0以上の数値を入力してください";
                             }
@@ -719,10 +813,14 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
                         TextFormField(
                           controller: criticalController,
                           decoration: const InputDecoration(labelText: "危険閾値"),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           enabled: !isSaving,
                           validator: (String? value) {
-                            final double? parsed = double.tryParse(value?.trim() ?? "");
+                            final double? parsed = double.tryParse(
+                              value?.trim() ?? "",
+                            );
                             if (parsed == null || parsed < 0) {
                               return "0以上の数値を入力してください";
                             }
@@ -732,7 +830,10 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
                         const SizedBox(height: YataSpacingTokens.md),
                         TextFormField(
                           controller: notesController,
-                          decoration: const InputDecoration(labelText: "メモ", hintText: "仕入れ先や補足など"),
+                          decoration: const InputDecoration(
+                            labelText: "メモ",
+                            hintText: "仕入れ先や補足など",
+                          ),
                           enabled: !isSaving,
                           maxLines: 3,
                         ),
@@ -743,7 +844,9 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
               ),
               actions: <Widget>[
                 TextButton(
-                  onPressed: isSaving ? null : () => Navigator.of(dialogContext).pop(),
+                  onPressed: isSaving
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
                   child: const Text("キャンセル"),
                 ),
                 FilledButton(
@@ -753,14 +856,21 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
                           if (!formKey.currentState!.validate()) {
                             return;
                           }
-                          if (selectedCategoryId == null || selectedCategoryId!.isEmpty) {
+                          if (selectedCategoryId == null ||
+                              selectedCategoryId!.isEmpty) {
                             showSnack("カテゴリを選択してください");
                             return;
                           }
 
-                          final double quantity = double.parse(quantityController.text.trim());
-                          final double alert = double.parse(alertController.text.trim());
-                          final double critical = double.parse(criticalController.text.trim());
+                          final double quantity = double.parse(
+                            quantityController.text.trim(),
+                          );
+                          final double alert = double.parse(
+                            alertController.text.trim(),
+                          );
+                          final double critical = double.parse(
+                            criticalController.text.trim(),
+                          );
 
                           if (critical > alert) {
                             showSnack("危険閾値は警告閾値以下で入力してください");
@@ -769,7 +879,8 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
 
                           setDialogState(() => isSaving = true);
 
-                          final String trimmedNotes = notesController.text.trim();
+                          final String trimmedNotes = notesController.text
+                              .trim();
                           final String? errorMessage = initialItem == null
                               ? await controller.createInventoryItem(
                                   name: nameController.text.trim(),
@@ -778,7 +889,9 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
                                   currentStock: quantity,
                                   alertThreshold: alert,
                                   criticalThreshold: critical,
-                                  notes: trimmedNotes.isEmpty ? null : trimmedNotes,
+                                  notes: trimmedNotes.isEmpty
+                                      ? null
+                                      : trimmedNotes,
                                 )
                               : await controller.updateInventoryItem(
                                   initialItem.id,
@@ -788,7 +901,9 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
                                   currentStock: quantity,
                                   alertThreshold: alert,
                                   criticalThreshold: critical,
-                                  notes: trimmedNotes.isEmpty ? null : trimmedNotes,
+                                  notes: trimmedNotes.isEmpty
+                                      ? null
+                                      : trimmedNotes,
                                 );
 
                           if (!mounted || !dialogContext.mounted) {
@@ -801,7 +916,9 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
                             return;
                           }
 
-                          showSnack(initialItem == null ? "在庫を追加しました" : "在庫を更新しました");
+                          showSnack(
+                            initialItem == null ? "在庫を追加しました" : "在庫を更新しました",
+                          );
 
                           Navigator.of(dialogContext).pop();
                         },
@@ -859,19 +976,29 @@ class _InventoryTableState extends State<_InventoryTable> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final List<InventoryRowViewData> rowViewData = controller.buildRowViewData();
-    final Map<String, InventoryItemViewData> itemById = <String, InventoryItemViewData>{
-      for (final InventoryItemViewData item in state.filteredItems) item.id: item,
-    };
+    final List<InventoryRowViewData> rowViewData = controller
+        .buildRowViewData();
+    final Map<String, InventoryItemViewData> itemById =
+        <String, InventoryItemViewData>{
+          for (final InventoryItemViewData item in state.filteredItems)
+            item.id: item,
+        };
 
     final ThemeData theme = Theme.of(context);
     final String? sortColumnId = _columnIdForSort(state.sortBy);
 
-    final String? summarySortHint = _summarySortHint(state.sortBy, state.sortAsc);
-    final String? metricsSortHint = _metricsSortHint(state.sortBy, state.sortAsc);
+    final String? summarySortHint = _summarySortHint(
+      state.sortBy,
+      state.sortAsc,
+    );
+    final String? metricsSortHint = _metricsSortHint(
+      state.sortBy,
+      state.sortAsc,
+    );
     final String? actionSortHint = _actionSortHint(state.sortBy, state.sortAsc);
-    final TextStyle hintStyle = (theme.textTheme.labelSmall ?? YataTypographyTokens.labelSmall)
-        .copyWith(color: YataColorTokens.textTertiary, fontSize: 11);
+    final TextStyle hintStyle =
+        (theme.textTheme.labelSmall ?? YataTypographyTokens.labelSmall)
+            .copyWith(color: YataColorTokens.textTertiary, fontSize: 11);
 
     final Widget summaryHeader = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -930,21 +1057,23 @@ class _InventoryTableState extends State<_InventoryTable> {
           final InventoryRowBadgeViewData? primaryBadge = row.badges.isEmpty
               ? null
               : row.badges.first;
-          final Iterable<InventoryRowBadgeViewData> secondaryBadges = row.badges.length <= 1
+          final Iterable<InventoryRowBadgeViewData> secondaryBadges =
+              row.badges.length <= 1
               ? const <InventoryRowBadgeViewData>[]
               : row.badges.skip(1);
 
           final TextStyle nameStyle =
-              (theme.textTheme.titleSmall ?? YataTypographyTokens.titleSmall).copyWith(
-                fontWeight: FontWeight.w600,
-              );
-          final TextStyle metaStyle = (theme.textTheme.bodySmall ?? YataTypographyTokens.bodySmall)
-              .copyWith(color: YataColorTokens.textSecondary, fontSize: 12);
+              (theme.textTheme.titleSmall ?? YataTypographyTokens.titleSmall)
+                  .copyWith(fontWeight: FontWeight.w600);
+          final TextStyle metaStyle =
+              (theme.textTheme.bodySmall ?? YataTypographyTokens.bodySmall)
+                  .copyWith(color: YataColorTokens.textSecondary, fontSize: 12);
           final TextStyle quantityStyle =
-              (theme.textTheme.titleMedium ?? YataTypographyTokens.titleMedium).copyWith(
-                fontWeight: FontWeight.w700,
-                color: _statusAccentColor(row.status),
-              );
+              (theme.textTheme.titleMedium ?? YataTypographyTokens.titleMedium)
+                  .copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: _statusAccentColor(row.status),
+                  );
 
           final List<Widget> statusBadges = <Widget>[
             if (primaryBadge != null)
@@ -953,9 +1082,16 @@ class _InventoryTableState extends State<_InventoryTable> {
                 type: _toStatusBadgeType(primaryBadge.type),
               ),
             for (final InventoryRowBadgeViewData badge in secondaryBadges)
-              YataStatusBadge(label: badge.label, type: _toStatusBadgeType(badge.type)),
+              YataStatusBadge(
+                label: badge.label,
+                type: _toStatusBadgeType(badge.type),
+              ),
             if (row.isBusy)
-              const YataStatusBadge(label: "処理中", type: YataStatusBadgeType.info, icon: Icons.sync),
+              const YataStatusBadge(
+                label: "処理中",
+                type: YataStatusBadgeType.info,
+                icon: Icons.sync,
+              ),
           ];
 
           final String quantityTooltip = <String>[
@@ -978,7 +1114,12 @@ class _InventoryTableState extends State<_InventoryTable> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Text(row.name, style: nameStyle, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(
+                      row.name,
+                      style: nameStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
@@ -1005,7 +1146,11 @@ class _InventoryTableState extends State<_InventoryTable> {
                 if (statusBadges.isNotEmpty)
                   Flexible(
                     fit: FlexFit.loose,
-                    child: Wrap(spacing: 6, runSpacing: 4, children: statusBadges),
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: statusBadges,
+                    ),
                   ),
                 if (statusBadges.isNotEmpty) const SizedBox(width: 8),
                 Expanded(
@@ -1031,8 +1176,11 @@ class _InventoryTableState extends State<_InventoryTable> {
                             child: Text(
                               row.unitLabel,
                               style:
-                                  (theme.textTheme.labelMedium ?? YataTypographyTokens.labelMedium)
-                                      .copyWith(color: YataColorTokens.textSecondary),
+                                  (theme.textTheme.labelMedium ??
+                                          YataTypographyTokens.labelMedium)
+                                      .copyWith(
+                                        color: YataColorTokens.textSecondary,
+                                      ),
                             ),
                           ),
                         ],
@@ -1122,16 +1270,21 @@ class _InventoryTableState extends State<_InventoryTable> {
                 children: <Widget>[
                   Text(
                     row.deltaLabel,
-                    style: (theme.textTheme.labelMedium ?? YataTypographyTokens.labelMedium)
-                        .copyWith(color: deltaColor),
+                    style:
+                        (theme.textTheme.labelMedium ??
+                                YataTypographyTokens.labelMedium)
+                            .copyWith(color: deltaColor),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     row.afterChangeLabel,
-                    style: (theme.textTheme.bodySmall ?? YataTypographyTokens.bodySmall).copyWith(
-                      color: YataColorTokens.textSecondary,
-                      fontSize: 12,
-                    ),
+                    style:
+                        (theme.textTheme.bodySmall ??
+                                YataTypographyTokens.bodySmall)
+                            .copyWith(
+                              color: YataColorTokens.textSecondary,
+                              fontSize: 12,
+                            ),
                   ),
                 ],
               ),
@@ -1175,22 +1328,26 @@ class _InventoryTableState extends State<_InventoryTable> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                const Icon(Icons.inventory_2_outlined, size: 48, color: YataColorTokens.neutral400),
+                const Icon(
+                  Icons.inventory_2_outlined,
+                  size: 48,
+                  color: YataColorTokens.neutral400,
+                ),
                 const SizedBox(height: YataSpacingTokens.sm),
                 Text(
                   "登録済みの在庫アイテムがありません",
                   textAlign: TextAlign.center,
-                  style: (theme.textTheme.titleSmall ?? YataTypographyTokens.titleSmall).copyWith(
-                    color: YataColorTokens.textSecondary,
-                  ),
+                  style:
+                      (theme.textTheme.titleSmall ??
+                              YataTypographyTokens.titleSmall)
+                          .copyWith(color: YataColorTokens.textSecondary),
                 ),
                 const SizedBox(height: YataSpacingTokens.xs),
                 Text(
                   "右上の「在庫を追加」から新しい在庫を登録してください。",
                   textAlign: TextAlign.center,
-                  style: (theme.textTheme.bodySmall ?? const TextStyle()).copyWith(
-                    color: YataColorTokens.textTertiary,
-                  ),
+                  style: (theme.textTheme.bodySmall ?? const TextStyle())
+                      .copyWith(color: YataColorTokens.textTertiary),
                 ),
               ],
             ),
@@ -1328,17 +1485,23 @@ class _InventoryAttentionSection extends StatelessWidget {
         subtitle: "対応が必要な在庫アイテムはありません",
         child: Text(
           "すべての在庫状態は適切です。",
-          style: theme.textTheme.bodyMedium?.copyWith(color: YataColorTokens.textSecondary),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: YataColorTokens.textSecondary,
+          ),
         ),
       );
     }
 
-    final List<InventoryItemViewData> highlights = items.take(3).toList(growable: false);
+    final List<InventoryItemViewData> highlights = items
+        .take(3)
+        .toList(growable: false);
 
     return YataSectionCard(
       title: "注意在庫アイテム",
       subtitle: "優先して確認したい在庫アイテムをまとめました",
-      actions: <Widget>[TextButton(onPressed: onShowAll, child: const Text("一覧で表示"))],
+      actions: <Widget>[
+        TextButton(onPressed: onShowAll, child: const Text("一覧で表示")),
+      ],
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           const double horizontalSpacing = YataSpacingTokens.xs;
@@ -1350,7 +1513,8 @@ class _InventoryAttentionSection extends StatelessWidget {
               availableWidth >= (minTileWidth * 2) + horizontalSpacing;
           final int columnCount = canDisplayTwoColumns ? 2 : 1;
           final double tileWidth = canDisplayTwoColumns
-              ? (availableWidth - horizontalSpacing * (columnCount - 1)) / columnCount
+              ? (availableWidth - horizontalSpacing * (columnCount - 1)) /
+                    columnCount
               : availableWidth;
 
           return Wrap(
@@ -1361,7 +1525,10 @@ class _InventoryAttentionSection extends StatelessWidget {
               for (final InventoryItemViewData item in highlights)
                 SizedBox(
                   width: tileWidth,
-                  child: _AttentionInventoryTile(item: item, onEditItem: onEditItem),
+                  child: _AttentionInventoryTile(
+                    item: item,
+                    onEditItem: onEditItem,
+                  ),
                 ),
             ],
           );
@@ -1381,11 +1548,20 @@ class _Status {
 _Status _statusFor(StockStatus status) {
   switch (status) {
     case StockStatus.sufficient:
-      return const _Status(color: YataColorTokens.success, bg: YataColorTokens.successSoft);
+      return const _Status(
+        color: YataColorTokens.success,
+        bg: YataColorTokens.successSoft,
+      );
     case StockStatus.low:
-      return const _Status(color: YataColorTokens.warning, bg: YataColorTokens.warningSoft);
+      return const _Status(
+        color: YataColorTokens.warning,
+        bg: YataColorTokens.warningSoft,
+      );
     case StockStatus.critical:
-      return const _Status(color: YataColorTokens.danger, bg: YataColorTokens.dangerSoft);
+      return const _Status(
+        color: YataColorTokens.danger,
+        bg: YataColorTokens.dangerSoft,
+      );
   }
 }
 
@@ -1407,7 +1583,9 @@ class _AttentionInventoryTile extends StatelessWidget {
     final TextTheme textTheme = theme.textTheme;
     final _Status statusStyle = _statusFor(item.status);
 
-    final BorderRadius borderRadius = BorderRadius.circular(YataRadiusTokens.medium);
+    final BorderRadius borderRadius = BorderRadius.circular(
+      YataRadiusTokens.medium,
+    );
     final Widget? statusBadge = _buildStatusBadge(item.status);
 
     final Widget stockTag = YataTag(
@@ -1470,7 +1648,10 @@ class _AttentionInventoryTile extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: borderRadius,
           border: Border(
-            left: BorderSide(color: statusStyle.color.withValues(alpha: 0.4), width: 4),
+            left: BorderSide(
+              color: statusStyle.color.withValues(alpha: 0.4),
+              width: 4,
+            ),
           ),
         ),
         child: content,
@@ -1480,7 +1661,11 @@ class _AttentionInventoryTile extends StatelessWidget {
     return Material(
       color: YataColorTokens.neutral50,
       borderRadius: borderRadius,
-      child: InkWell(onTap: () => onEditItem(item), borderRadius: borderRadius, child: content),
+      child: InkWell(
+        onTap: () => onEditItem(item),
+        borderRadius: borderRadius,
+        child: content,
+      ),
     );
   }
 
@@ -1527,7 +1712,9 @@ class _ErrorBanner extends StatelessWidget {
     padding: const EdgeInsets.all(YataSpacingTokens.md),
     decoration: BoxDecoration(
       color: YataColorTokens.dangerSoft,
-      borderRadius: const BorderRadius.all(Radius.circular(YataRadiusTokens.medium)),
+      borderRadius: const BorderRadius.all(
+        Radius.circular(YataRadiusTokens.medium),
+      ),
       border: Border.all(color: YataColorTokens.danger.withValues(alpha: 0.3)),
     ),
     child: Row(

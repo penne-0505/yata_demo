@@ -100,32 +100,36 @@ class YataDataTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextStyle headingStyle =
-        (Theme.of(context).textTheme.titleSmall ?? YataTypographyTokens.titleSmall).copyWith(
-          color: YataColorTokens.textSecondary,
-          fontWeight: FontWeight.w600,
-        );
+        (Theme.of(context).textTheme.titleSmall ??
+                YataTypographyTokens.titleSmall)
+            .copyWith(
+              color: YataColorTokens.textSecondary,
+              fontWeight: FontWeight.w600,
+            );
     final TextStyle rowStyle =
-        Theme.of(context).textTheme.bodyMedium ?? YataTypographyTokens.bodyMedium;
+        Theme.of(context).textTheme.bodyMedium ??
+        YataTypographyTokens.bodyMedium;
 
     return Theme(
       data: Theme.of(context).copyWith(
         dataTableTheme: DataTableThemeData(
-          headingRowColor: MaterialStateProperty.all(YataColorTokens.neutral100),
+          headingRowColor: WidgetStateProperty.all(YataColorTokens.neutral100),
           headingTextStyle: headingStyle,
-          dataRowColor: MaterialStateProperty.resolveWith<Color?>((Set<MaterialState> states) {
-            // selected状態でもデフォルトのグレーアウトを防ぐため、
-            // 常に透明を返す（個別の行の色設定を優先させる）
-            if (states.contains(MaterialState.selected)) {
-              return Colors.transparent;
+          dataRowColor: WidgetStateProperty.resolveWith<Color?>((
+            Set<WidgetState> states,
+          ) {
+            if (states.contains(WidgetState.selected)) {
+              return YataColorTokens.selectionSoft.withValues(alpha: 0.65);
             }
-            if (states.contains(MaterialState.hovered)) {
+            if (states.contains(WidgetState.hovered)) {
               return YataColorTokens.primarySoft.withValues(alpha: 0.6);
             }
-            if (states.contains(MaterialState.focused) ||
-                states.contains(MaterialState.pressed) ||
-                states.contains(MaterialState.dragged)) {
-              // フォーカスやドラッグ時も独自背景に頼らず、行固有の配色を優先する
-              return Colors.transparent;
+            if (states.contains(WidgetState.pressed) ||
+                states.contains(WidgetState.focused)) {
+              return YataColorTokens.selectionTint;
+            }
+            if (states.contains(WidgetState.dragged)) {
+              return YataColorTokens.selectionSoft.withValues(alpha: 0.45);
             }
             return null;
           }),
@@ -158,7 +162,10 @@ class YataDataTable extends StatelessWidget {
             sortAscending: sortAscending,
           );
           if (shrinkWrap) {
-            table = SingleChildScrollView(scrollDirection: Axis.horizontal, child: table);
+            table = SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: table,
+            );
           } else {
             table = SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -169,10 +176,7 @@ class YataDataTable extends StatelessWidget {
             );
           }
           // 背景を白に設定してselected状態のグレーアウトを隠す
-          return Container(
-            color: Colors.white,
-            child: table,
-          );
+          return Container(color: Colors.white, child: table);
         },
       ),
     );
@@ -191,7 +195,9 @@ class YataDataTable extends StatelessWidget {
         DataColumn(
           label: label,
           numeric: spec.numeric,
-          onSort: spec.onSort == null ? null : (int _, bool ascending) => spec.onSort!(ascending),
+          onSort: spec.onSort == null
+              ? null
+              : (int _, bool ascending) => spec.onSort!(ascending),
         ),
       );
     }
@@ -206,12 +212,27 @@ class YataDataTable extends StatelessWidget {
     final List<DataRow> tappableRows = <DataRow>[];
     for (int index = 0; index < baseRows.length; index++) {
       final DataRow baseRow = baseRows[index];
+      void rowTap() => onRowTap!(index);
       tappableRows.add(
         DataRow(
           key: baseRow.key,
           color: baseRow.color,
-          cells: baseRow.cells,
-          onSelectChanged: (_) => onRowTap!(index),
+          cells: baseRow.cells
+              .map(
+                (DataCell cell) => DataCell(
+                  GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: cell.onTap ?? rowTap,
+                    child: cell.child,
+                  ),
+                  placeholder: cell.placeholder,
+                  showEditIcon: cell.showEditIcon,
+                  onLongPress: cell.onLongPress,
+                  onTapDown: cell.onTapDown,
+                  onDoubleTap: cell.onDoubleTap,
+                ),
+              )
+              .toList(growable: false),
         ),
       );
     }
@@ -231,6 +252,11 @@ class YataDataTable extends StatelessWidget {
       );
 
       final List<DataCell> cells = <DataCell>[];
+      VoidCallback? tapHandler = rowSpec.onTap;
+      if (tapHandler == null && onRowTap != null) {
+        tapHandler = () => onRowTap!(rowIndex);
+      }
+
       for (int cellIndex = 0; cellIndex < columnCount; cellIndex++) {
         final YataTableCellSpec cellSpec = rowSpec.cells[cellIndex];
         final YataTableColumnSpec columnSpec = specs[cellIndex];
@@ -247,7 +273,8 @@ class YataDataTable extends StatelessWidget {
           );
         }
 
-        final AlignmentGeometry? alignment = cellSpec.alignment ?? columnSpec.defaultAlignment;
+        final AlignmentGeometry? alignment =
+            cellSpec.alignment ?? columnSpec.defaultAlignment;
         if (alignment != null) {
           content = Align(alignment: alignment, child: content);
         }
@@ -256,13 +283,21 @@ class YataDataTable extends StatelessWidget {
             rowSpec.errorMessage!.isNotEmpty &&
             cellSpec.errorMessage == null &&
             cellIndex == 0) {
-          content = yataTableCellWithError(child: content, message: rowSpec.errorMessage!);
+          content = yataTableCellWithError(
+            child: content,
+            message: rowSpec.errorMessage!,
+          );
         }
-        if (cellSpec.errorMessage != null && cellSpec.errorMessage!.isNotEmpty) {
-          content = yataTableCellWithError(child: content, message: cellSpec.errorMessage!);
+        if (cellSpec.errorMessage != null &&
+            cellSpec.errorMessage!.isNotEmpty) {
+          content = yataTableCellWithError(
+            child: content,
+            message: cellSpec.errorMessage!,
+          );
         }
 
-        final bool showBusy = (rowSpec.isBusy && cellSpec.applyRowBusyOverlay) || cellSpec.isBusy;
+        final bool showBusy =
+            (rowSpec.isBusy && cellSpec.applyRowBusyOverlay) || cellSpec.isBusy;
         if (showBusy) {
           content = yataTableBusyOverlay(content);
         }
@@ -279,27 +314,48 @@ class YataDataTable extends StatelessWidget {
           content = Tooltip(message: tooltipMessage, child: content);
         }
 
+        if (tapHandler != null) {
+          content = GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: tapHandler,
+            child: content,
+          );
+        }
+
         cells.add(DataCell(content));
       }
 
-      VoidCallback? tapHandler = rowSpec.onTap;
-      if (tapHandler == null && onRowTap != null) {
-        tapHandler = () => onRowTap!(rowIndex);
-      }
-
-      MaterialStateProperty<Color?>? rowColor;
+      WidgetStateProperty<Color?>? rowColor;
       if (rowSpec.errorMessage != null && rowSpec.errorMessage!.isNotEmpty) {
-        rowColor = MaterialStateProperty.resolveWith<Color?>((Set<MaterialState> states) {
+        rowColor = WidgetStateProperty.resolveWith<Color?>((
+          Set<WidgetState> states,
+        ) {
           final Color base = YataColorTokens.dangerSoft.withValues(alpha: 0.6);
-          if (states.contains(MaterialState.hovered)) {
+          if (states.contains(WidgetState.selected)) {
+            return Color.alphaBlend(YataColorTokens.selectionTint, base);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return Color.alphaBlend(YataColorTokens.selectionTint, base);
+          }
+          if (states.contains(WidgetState.pressed) ||
+              states.contains(WidgetState.focused)) {
             return Color.alphaBlend(YataColorTokens.selectionTint, base);
           }
           return base;
         });
       } else if (rowSpec.backgroundColor != null) {
         final Color base = rowSpec.backgroundColor!;
-        rowColor = MaterialStateProperty.resolveWith<Color?>((Set<MaterialState> states) {
-          if (states.contains(MaterialState.hovered)) {
+        rowColor = WidgetStateProperty.resolveWith<Color?>((
+          Set<WidgetState> states,
+        ) {
+          if (states.contains(WidgetState.selected)) {
+            return Color.alphaBlend(YataColorTokens.selectionTint, base);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return Color.alphaBlend(YataColorTokens.selectionTint, base);
+          }
+          if (states.contains(WidgetState.pressed) ||
+              states.contains(WidgetState.focused)) {
             return Color.alphaBlend(YataColorTokens.selectionTint, base);
           }
           return base;
@@ -310,7 +366,6 @@ class YataDataTable extends StatelessWidget {
         key: rowSpec.key ?? ValueKey<String>(rowSpec.id),
         color: rowColor,
         cells: cells,
-        onSelectChanged: tapHandler == null ? null : (_) => tapHandler!(),
       );
     });
   }
