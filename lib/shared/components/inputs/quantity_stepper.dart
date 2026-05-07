@@ -45,8 +45,25 @@ class _YataQuantityStepperState extends State<YataQuantityStepper> {
   );
   final FocusNode _focusNode = FocusNode();
 
+  bool get _allowsNegativeValues => widget.min < 0;
   bool get _canDecrement => widget.value > widget.min;
   bool get _canIncrement => widget.max == null || widget.value < widget.max!;
+
+  TextInputFormatter get _integerInputFormatter {
+    if (!_allowsNegativeValues) {
+      return FilteringTextInputFormatter.digitsOnly;
+    }
+    return TextInputFormatter.withFunction((
+      TextEditingValue oldValue,
+      TextEditingValue newValue,
+    ) {
+      final String text = newValue.text;
+      if (text.isEmpty || text == "-" || RegExp(r"^-?\d+$").hasMatch(text)) {
+        return newValue;
+      }
+      return oldValue;
+    });
+  }
 
   int _clampQuantity(int q) {
     if (q < widget.min) {
@@ -66,7 +83,10 @@ class _YataQuantityStepperState extends State<YataQuantityStepper> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _focusNode.requestFocus();
-        _controller.selection = TextSelection(baseOffset: 0, extentOffset: _controller.text.length);
+        _controller.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _controller.text.length,
+        );
       }
     });
   }
@@ -118,14 +138,19 @@ class _YataQuantityStepperState extends State<YataQuantityStepper> {
   @override
   Widget build(BuildContext context) {
     final TextStyle valueStyle =
-        (Theme.of(context).textTheme.titleMedium ?? YataTypographyTokens.titleMedium).copyWith(
-          color: YataColorTokens.textPrimary,
-        );
+        (Theme.of(context).textTheme.titleMedium ??
+                YataTypographyTokens.titleMedium)
+            .copyWith(color: YataColorTokens.textPrimary);
+    final double editorWidth = widget.compact
+        ? (_allowsNegativeValues ? 52 : 42)
+        : (_allowsNegativeValues ? 64 : 56);
 
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border.all(color: YataColorTokens.border),
-        borderRadius: const BorderRadius.all(Radius.circular(YataRadiusTokens.medium)),
+        borderRadius: const BorderRadius.all(
+          Radius.circular(YataRadiusTokens.medium),
+        ),
         color: YataColorTokens.neutral0,
       ),
       child: Row(
@@ -148,10 +173,11 @@ class _YataQuantityStepperState extends State<YataQuantityStepper> {
             constraints: BoxConstraints(minWidth: widget.compact ? 28 : 36),
             child: _editing
                 ? SizedBox(
-                    width: (widget.compact ? 42 : 56),
+                    width: editorWidth,
                     child: Shortcuts(
                       shortcuts: <ShortcutActivator, Intent>{
-                        SingleActivator(LogicalKeyboardKey.escape): const _CancelEditIntent(),
+                        SingleActivator(LogicalKeyboardKey.escape):
+                            const _CancelEditIntent(),
                       },
                       child: Actions(
                         actions: <Type, Action<Intent>>{
@@ -174,9 +200,11 @@ class _YataQuantityStepperState extends State<YataQuantityStepper> {
                             autofocus: true,
                             textAlign: TextAlign.center,
                             style: valueStyle,
-                            keyboardType: TextInputType.number,
+                            keyboardType: TextInputType.numberWithOptions(
+                              signed: _allowsNegativeValues,
+                            ),
                             inputFormatters: <TextInputFormatter>[
-                              FilteringTextInputFormatter.digitsOnly,
+                              _integerInputFormatter,
                             ],
                             onSubmitted: (_) => _commitEdit(),
                             decoration: const InputDecoration(
@@ -200,7 +228,9 @@ class _YataQuantityStepperState extends State<YataQuantityStepper> {
                       ),
                       child: Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: widget.compact ? YataSpacingTokens.sm : YataSpacingTokens.md,
+                          horizontal: widget.compact
+                              ? YataSpacingTokens.sm
+                              : YataSpacingTokens.md,
                         ),
                         alignment: Alignment.center,
                         child: Text("${widget.value}", style: valueStyle),
@@ -245,13 +275,19 @@ class _StepButton extends StatelessWidget {
     type: MaterialType.transparency,
     child: InkWell(
       onTap: enabled ? onPressed : null,
-      borderRadius: const BorderRadius.all(Radius.circular(YataRadiusTokens.medium)),
+      borderRadius: const BorderRadius.all(
+        Radius.circular(YataRadiusTokens.medium),
+      ),
       child: Padding(
-        padding: EdgeInsets.all(compact ? YataSpacingTokens.xs : YataSpacingTokens.sm),
+        padding: EdgeInsets.all(
+          compact ? YataSpacingTokens.xs : YataSpacingTokens.sm,
+        ),
         child: Icon(
           icon,
           size: compact ? 18 : 20,
-          color: enabled ? YataColorTokens.textPrimary : YataColorTokens.textSecondary,
+          color: enabled
+              ? YataColorTokens.textPrimary
+              : YataColorTokens.textSecondary,
         ),
       ),
     ),
