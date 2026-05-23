@@ -3,7 +3,7 @@ title: Demo Local Runtime Guide
 status: active
 draft_status: n/a
 created_at: 2026-05-06
-updated_at: 2026-05-06
+updated_at: 2026-05-23
 references:
   - ../../standards/documentation_guidelines.md
   - ../../standards/documentation_operations.md
@@ -59,6 +59,13 @@ seed は `lib/infra/local/demo/demo_seed_service.dart` にある。`demo_seed_ma
 - `daily_summaries`
 
 データを初期状態へ戻す場合は `DemoSeedService.resetAndSeed()` を使う。テストでは in-memory DB に対して同じサービスを使うため、seed の再現性を保てる。
+
+## Sales Analytics Preview
+売上分析画面は、公開デモで画面密度を伝えるための固定プレビューを presentation 層に持つ。
+
+`lib/features/analytics/presentation/pages/sales_analytics_page.dart` は KPI、売上トレンド、カテゴリ構成、時間帯別売上、分析結果を静的データで描画する。`AnalyticsService`、`DailySummaryRepository`、`daily_summaries` の集計値には接続しない。
+
+実データ連携へ切り替える場合は、表示データの provider / view data を追加してから、この固定プレビュー値を差し替える。
 
 ## Local Runtime Components
 `buildDemoOverrides()` は次を差し替える。

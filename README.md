@@ -31,7 +31,7 @@ Supabase 実装と依存はまだ残していますが、標準のデモ経路�
 .fvm/flutter_sdk/bin/flutter run -d linux
 ```
 
-デモ起動後は `/order` を入口に、注文作成、注文履歴、在庫確認、メニュー確認、売上確認、CSV export をローカルデータで試せます。
+デモ起動後は `/order` を入口に、注文作成、注文履歴、在庫確認、メニュー確認、売上分析プレビュー、CSV export をローカルデータで試せます。
 
 ## 配布版とログ
 
@@ -58,6 +58,8 @@ Supabase 経路を明示的に使う場合:
 - 仕入、在庫トランザクション、廃棄ログ
 - カート、注文履歴、注文明細
 - 日次売上サマリー
+
+売上分析画面は公開デモ向けの固定プレビューとして、KPI、売上トレンド、カテゴリ構成、時間帯分析、分析結果を表示します。現時点では `AnalyticsService` や `DailySummaryRepository` に接続せず、presentation 層だけで表示を完結させています。
 
 デモデータを初期状態に戻す場合は、開発用コードやテストから `DemoSeedService.resetAndSeed()` を呼びます。`ensureSeeded()` は同一 seed version の重複投入を防ぎます。
 
