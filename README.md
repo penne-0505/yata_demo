@@ -1,5 +1,13 @@
 # YATA Demo
 
+<img width="1901" height="1165" alt="image" src="https://github.com/user-attachments/assets/1db80c2e-af97-4d1c-a154-d427c11e09cd" />
+<img width="1901" height="1165" alt="image" src="https://github.com/user-attachments/assets/0e9e26ab-7098-4e8d-8263-db4764af8d63" />
+<img width="1901" height="1165" alt="image" src="https://github.com/user-attachments/assets/33ba108e-2efb-4f82-869c-c6635031913f" />
+<img width="1901" height="1165" alt="image" src="https://github.com/user-attachments/assets/cfc1b92e-524e-4340-92d8-61d083905e77" />
+<img width="1901" height="1165" alt="image" src="https://github.com/user-attachments/assets/7c570681-a65c-4fd7-943a-6a0982f4aac5" />
+<img width="1901" height="1165" alt="image" src="https://github.com/user-attachments/assets/9de22869-69a4-45e1-84eb-1bc1ad83fe5e" />
+
+
 YATA は、小規模な飲食・屋台オペレーション向けの注文、在庫、メニュー、売上確認アプリです。
 **このリポジトリはローカルデモです。**ログイン、Supabase 初期化、Realtime 接続、Supabase RPC を**使わず**、固定ユーザーと Drift のローカル DB だけで主要な業務フローを触れます。(本来はこれらスタックを用いる前提の実装です。)
 
