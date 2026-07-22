@@ -1,3 +1,4 @@
+<!--
 # jj (Jujustu) Workflow Standard
 
 このプロジェクトでは、「jj (Jujutsu)」を用いたバージョン管理を採用しています。一般的な開発フローにおいての使用方法を以下に示します。
@@ -28,3 +29,8 @@
     4. **"コンフリクトが発生している"旨のエラーが出た場合**
         - あなたがLLMである場合は、ユーザーに現在の状況を説明して、判断を仰いでください。この場合には、いかなる変更も禁止されます。
         - 人間のユーザーである場合は、`jj edit`でコンフリクトを解消し、再度`jj git push --bookmark dev`を実行してください。
+-->
+
+# Retired jj workflow
+
+この legacy template artifact は運用対象外です。upstream `v1.0.0` で削除され、project customization と live reference がないことを migration ledger で確認しています。

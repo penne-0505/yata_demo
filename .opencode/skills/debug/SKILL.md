@@ -1,4 +1,5 @@
----
+<!-- markdownlint-disable-file -->
+<!-- Deactivated: upstream v1.0.0 removed this uncustomized legacy skill. -->
 name: systematic-debugging
 description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes - four-phase framework (root cause investigation, pattern analysis, hypothesis testing, implementation) that ensures understanding before attempting solutions
 ---

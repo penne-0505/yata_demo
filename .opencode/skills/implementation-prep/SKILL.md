@@ -1,4 +1,5 @@
----
+<!-- markdownlint-disable-file -->
+<!-- Deactivated: use .agents/skills/implementation-prep/SKILL.md. -->
 name: implementation-prep
 description: Use when preparing to implement instructions by reviewing documentation and TODO.md so the actual work starts with a shared plan.
 ---

@@ -1,4 +1,5 @@
----
+<!-- markdownlint-disable-file -->
+<!-- Deactivated: use .agents/skills/docs-prep/SKILL.md. -->
 name: docs-prep
 description: Use when preparing documentation for large implementations (Size >= M) following the _docs/ hierarchy and lifecycle rules.
 ---

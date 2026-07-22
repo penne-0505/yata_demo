@@ -1,4 +1,5 @@
----
+<!-- markdownlint-disable-file -->
+<!-- Deactivated: use .agents/skills/docs-cleanup/SKILL.md. -->
 name: docs-cleanup
 description: Use after completing large implementations to finalize documentation, archive temporary docs, and update guide/reference following the _docs/ lifecycle rules.
 ---

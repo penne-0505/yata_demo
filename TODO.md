@@ -1,7 +1,7 @@
 # Project Task Management Rules
 
 ## 0. System Metadata
-- **Current Max ID**: `Next ID No: 13` (※タスク追加時にインクリメント必須)
+- **Current Max ID**: `Next ID No: 15` (※タスク追加時にインクリメント必須)
 - **ID Source of Truth**: このファイルの `Next ID No` 行が、全プロジェクトにおける唯一のID発番元である。
 
 ## 1. Task Lifecycle (State Machine)
@@ -15,7 +15,7 @@
 ### Phase 1: Backlog (Structured)
 - **Location**: `# Backlog` セクション
 - **Status**: タスクとして認識済みだが、着手準備未完了。
-- **Entry Criteria**: 
+- **Entry Criteria**:
   - IDが一意に採番されている。
   - 必須フィールド（Title, ID, Priority, Size, Area, Description）が埋まっている。
 - **Exit Condition**: `Ready` の要件を満たす。
@@ -180,15 +180,14 @@ ID生成およびタイトルのプレフィックスには以下のみを使用
 - **Plan**: None
 ```
 
---- 
+---
 
 ## Inbox
-- 
+-
 
 ---
 
 ## Backlog
-
 
 - **Title**: [Chore] Review and customize AGENTS.md
 - **ID**: Docs-Chore-1
@@ -353,6 +352,30 @@ ID生成およびタイトルのプレフィックスには以下のみを使用
   4. [x] ドキュメント内のコマンドが実際に存在することを確認する
 - **Description**: デモ化後の開発者・展示担当者向け運用情報を、実装と矛盾しない形で残す。
 - **Plan**: None
+
+### Docs-Chore-14: [Chore] Complete Docs Template v1.0.0 Migration Closure
+
+- **Title**: [Chore] Complete Docs Template v1.0.0 Migration Closure
+- **ID**: Docs-Chore-14
+- **Priority**: P1
+- **Size**: M
+- **Risk**: Medium
+- **Area**: Docs
+- **Dependencies**: []
+- **Goal**: pre-P の legacy docs を strict-clean にし、unscoped validation の明示レビュー後にだけ P-scoped compatibility enforcement を解除できる状態にする。
+- **Acceptance Criteria**:
+  - AC-001: migration provenance、artifact ledger、既存の compatibility/strict gate evidence が canonical migration records から再現できる。
+  - AC-002: pre-P docs の strict schema/reference warning を解消し、unscoped wrapper が warning なしで PASS する。
+  - AC-003: unscoped PASS をレビューした後に、CI/local の `DD_SCOPE_BASE=P` / `DD_SCOPE_DIFF_FILTER=ACMR` compatibility scope を解除または継続する判断と根拠が records に残る。
+- **Steps**:
+  1. [ ] `_docs/qa/Docs/docs-template-v1-migration/verification.md` の deferred guide reference を修正し、unscoped wrapper を warning なしで実行する。
+  2. [ ] Plan の compatibility-horizon 条件に照らして、CI/local scope を解除または維持する判断を review する。
+  3. [ ] ledger、QA test-plan、verification の AC-002/AC-005 と closure evidence を更新する。
+- **Description**: v1.0.0 migration の初回 integration evidence は残すが、pre-P docs が strict-clean になるまで scoped compatibility enforcement は継続する。これは完了済み migration の履歴ではなく、scope 解除を管理する残作業の authority である。
+- **Plan**: `_docs/plan/Docs/docs-template-v1-migration/plan.md`
+- **Intent**: `_docs/intent/Docs/docs-template-v1-migration/decision.md`
+- **QA**: `_docs/qa/Docs/docs-template-v1-migration/test-plan.md`
+- **Verification**: `_docs/qa/Docs/docs-template-v1-migration/verification.md`
 
 ---
 

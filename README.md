@@ -1,3 +1,5 @@
+<!-- markdownlint-disable-file MD012 MD033 -->
+
 # YATA Demo
 
 <img width="1901" height="1165" alt="image" src="https://github.com/user-attachments/assets/1db80c2e-af97-4d1c-a154-d427c11e09cd" />

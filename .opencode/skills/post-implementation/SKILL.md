@@ -1,4 +1,5 @@
----
+<!-- markdownlint-disable-file -->
+<!-- Deactivated: use .agents/skills/post-implementation/SKILL.md. -->
 name: post-implementation
 description: Use after completing implementation to wrap up work, update documentation, archive TODOs, and communicate what was changed.
 ---

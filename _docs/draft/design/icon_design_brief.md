@@ -4,10 +4,15 @@ draft_status: exploring
 status: proposed
 created_at: 2026-05-06
 updated_at: 2026-05-06
+stale_exempt_until: 2026-08-21
+stale_exempt_reason: "Retained as an active design input during docs template migration"
+stale_extensions: 1
 references: []
 related_issues: []
 related_prs: []
 ---
+
+<!-- markdownlint-disable-file MD036 MD040 -->
 
 # YATA アプリアイコン デザインブリーフ
 
@@ -409,5 +414,5 @@ icons_launcher:
 
 - [Material 3 Icon Guidelines](https://m3.material.io/styles/icons/overview)
 - [Material Symbols](https://fonts.google.com/icons)
-- [YATA Color Tokens](../../reference/design/color_tokens.md)（将来作成予定）
-- [YATA Typography Tokens](../../reference/design/typography_tokens.md)（将来作成予定）
+- YATA Color Tokens: `_docs/reference/design/color_tokens.md`（将来作成予定）
+- YATA Typography Tokens: `_docs/reference/design/typography_tokens.md`（将来作成予定）
