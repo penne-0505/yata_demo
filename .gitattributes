@@ -1,0 +1,5 @@
+# Flutter web build output is generated, not hand-written source.
+web/*.dart.js linguist-generated
+
+# Docs-driven workflow validators are shared tooling, not this project's source.
+scripts/*.mjs linguist-vendored
